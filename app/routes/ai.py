@@ -1,6 +1,4 @@
 from fastapi import APIRouter , HTTPException
-import torch
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from app.models.paraphraseModel import ParaphraseModel as pModel
 from word.deepseek import analyze_word , analyze_sentence_with_word, fix_grammar_errors, paraphrase, compare_words
 from dotenv import load_dotenv
@@ -12,13 +10,6 @@ api_key = os.getenv('HUGGING_FACE_API_KEY')
 
 
 router = APIRouter()
-
-#Choose a device (cpu or cuda)
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
-#Load model and tokenizer
-tokenizer = AutoTokenizer.from_pretrained("humarin/chatgpt_paraphraser_on_T5_base")
-model = AutoModelForSeq2SeqLM.from_pretrained("humarin/chatgpt_paraphraser_on_T5_base").to(device)
 
 @router.get("/generate/{word}")
 async def generate_response(word: str):
