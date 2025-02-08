@@ -216,6 +216,6 @@ xxhash==3.5.0
 xyzservices==2024.4.0
 yarl==1.18.3
 yfinance==0.2.37
-you-get @ file:///C:/Users/ahmet/OneDrive/Desktop/testing/you-get
+you-get
 zipp==3.18.2
 zope.interface==6.4.post2
