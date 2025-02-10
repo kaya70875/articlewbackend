@@ -8,9 +8,14 @@ router = APIRouter()
 
 @router.get("/wordInfo/{word}" , response_model=WordInfoResponse)
 async def get_word_info(word: str):
-    # Call the function to get word information
-    word_info = await asyncio.to_thread(get_word_info_extended, word)
-    return word_info
+    try:
+        # Call the function to get word information
+        word_info = await asyncio.to_thread(get_word_info_extended, word)
+        return word_info
+    except LookupError:
+        return 'NLTK data not found'
+    except:
+        return 'Something went wrong while getting word info'
 
 @router.get("/wordPos/{word}/{sentence}")
 async def get_word_Pos(word: str, sentence: str):

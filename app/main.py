@@ -20,7 +20,10 @@ app.include_router(sentences_route, prefix="/api", tags=["Sentences"])
 app.include_router(ai_route, prefix="/api", tags=["AI"])
 app.include_router(wordInfo_route, prefix="/api", tags=["WordInfo"])
 
+nltk.data.path.clear()
 nltk.data.path.append(os.getenv("NLTK_DATA", "./nltk_data"))
+
+print("NLTK data path:", nltk.data.path)
 
 # Run the app
 if __name__ == "__main__":
