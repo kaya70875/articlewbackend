@@ -7,10 +7,6 @@ import asyncio
 
 router = APIRouter()
 
-#Download Libraries
-nltk.download('wordnet')
-nltk.download('omw-1.4')
-
 @router.get("/wordInfo/{word}" , response_model=WordInfoResponse)
 async def get_word_info(word: str):
     # Call the function to get word information

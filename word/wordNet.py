@@ -3,10 +3,6 @@ from nltk.corpus import wordnet
 from nltk.corpus import brown
 from collections import Counter
 
-# Ensure the necessary resources are downloaded
-nltk.download('brown')
-nltk.download('universal_tagset')
-
 def get_word_info_extended(word : str) -> dict:
     """
     Get information about a word from WordNet, including its definition, synonyms, and examples.
