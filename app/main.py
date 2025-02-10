@@ -3,6 +3,8 @@ from app.routes.sentences import router as sentences_route
 from app.routes.ai import router as ai_route
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.wordInfo import router as wordInfo_route
+import nltk
+import os
 
 app = FastAPI()
 
@@ -17,6 +19,8 @@ app.add_middleware(
 app.include_router(sentences_route, prefix="/api", tags=["Sentences"])
 app.include_router(ai_route, prefix="/api", tags=["AI"])
 app.include_router(wordInfo_route, prefix="/api", tags=["WordInfo"])
+
+nltk.data.path.append(os.getenv("NLTK_DATA", "/app/nltk_data"))
 
 # Run the app
 if __name__ == "__main__":
