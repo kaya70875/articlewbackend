@@ -86,7 +86,7 @@ async def paraphrase(sentence : str, api_key : str, context: str = 'casual') -> 
     messages = [
         {
             "role": "user",
-            "content": f"Paraphrase the following sentence in a {context} way '{sentence}'. Give me five different examples and provide only examples in plain text without additional explanations. Do not say 'Sure' or 'Of course' at the beginning and do not say anything except your answer."
+            "content": f"Paraphrase the following sentence in a {context} way '{sentence}'. Give me five different examples and provide only examples, in plain text without additional explanations. Lastly number the examples."
         }
     ]
 
