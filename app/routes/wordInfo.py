@@ -1,5 +1,4 @@
 from fastapi import APIRouter
-import nltk
 from app.models.word_info import WordInfoResponse
 from word.wordNet import get_word_info_extended
 from word.spacyWord import get_word_pos
