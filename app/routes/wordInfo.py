@@ -7,7 +7,7 @@ from word.spacyWord import calculate_similarity_score
 
 router = APIRouter()
 
-@router.get("/wordInfo/{word}" , response_model=WordInfoResponse)
+@router.get("/wordInfo/{word}" , response_model=WordInfoResponse, response_description="Get word info like definition, synonyms, examples")
 async def get_word_info(word: str):
     try:
         # Call the function to get word information
@@ -18,13 +18,7 @@ async def get_word_info(word: str):
     except:
         return 'Something went wrong while getting word info'
 
-@router.get("/wordPos/{word}/{sentence}")
-async def get_word_Pos(word: str, sentence: str):
-    # Call the function to get word information
-    word_info = await asyncio.to_thread(get_word_pos, word, sentence)
-    return {"response" : word_info}
-
-@router.get('/wordSimilarity/{word1}/{word2}', response_model=WordSimilarityResponse)
+@router.get('/wordSimilarity/{word1}/{word2}', response_model=WordSimilarityResponse, response_description="Get a similarity score between two words")
 async def get_word_similarity(word1: str, word2: str):
     # Call the function to get word information
     score = await asyncio.to_thread(calculate_similarity_score, word1, word2)
