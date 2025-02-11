@@ -1,9 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Depends
 from app.models.word_info import *
 from word.wordNet import get_word_info_extended
-from word.spacyWord import get_word_pos
 import asyncio
+import logging
 from word.spacyWord import calculate_similarity_score
+from app.error_handlers.decorator import handle_exceptions
+
+logging.basicConfig(level=logging.ERROR)
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -12,15 +16,26 @@ async def get_word_info(word: str):
     try:
         # Call the function to get word information
         word_info = await asyncio.to_thread(get_word_info_extended, word)
+        if word_info['pos'] is None:
+            logger.error(f"Word not found! : {word}")
+            raise HTTPException(status_code=404, detail="Word not found.")
         return word_info
     except LookupError:
-        return 'NLTK data not found'
-    except:
-        return 'Something went wrong while getting word info'
+        logger.error(f"NLTK data not found!")
+        raise HTTPException(status_code=404, detail="NTLK Data not found.")
+    except Exception as e:
+        logger.error(f"Unexpected error occurred! : {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @router.get('/wordSimilarity/{word1}/{word2}', response_model=WordSimilarityResponse, response_description="Get a similarity score between two words")
-async def get_word_similarity(word1: str, word2: str):
+@handle_exceptions
+async def get_word_similarity(inputs : WordSimilarityRequest = Depends()):
+    #Validete inputs
+    if inputs.word1 == inputs.word2:
+        logger.error('Got the same word as an input.')
+        raise HTTPException(status_code=400, detail="Both words must not be the same.")
+
     # Call the function to get word information
-    score = await asyncio.to_thread(calculate_similarity_score, word1, word2)
-    percentage = (score * 100)
-    return {"score" : percentage.__round__(2)}
+    score = await asyncio.to_thread(calculate_similarity_score, inputs.word1, inputs.word2)
+
+    return {"score" : round((score * 100), 2)}

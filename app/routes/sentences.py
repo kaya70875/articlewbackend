@@ -1,10 +1,16 @@
 from fastapi import APIRouter, HTTPException, Query
 from app.models.database import sentences_collection
 from utils.helpers import extract_sentence
+from app.error_handlers.decorator import handle_exceptions
+import logging
+
+logging.basicConfig(level=logging.ERROR)
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 @router.get("/sentences/{word}")
+@handle_exceptions
 async def get_sentences(
     word: str,
     categories: str = Query(None, description="Comma-separated list of categories"),
@@ -59,6 +65,7 @@ async def get_sentences(
 
     # Handle no results
     if not results:
+        logger.info("No sentences found for the given word and filters")
         raise HTTPException(status_code=404, detail="No sentences found for the given word and filters")
 
     return {
