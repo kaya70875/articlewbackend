@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.models.word_info import WordInfoResponse
+from app.models.word_info import *
 from word.wordNet import get_word_info_extended
 from word.spacyWord import get_word_pos
 import asyncio
@@ -24,7 +24,7 @@ async def get_word_Pos(word: str, sentence: str):
     word_info = await asyncio.to_thread(get_word_pos, word, sentence)
     return {"response" : word_info}
 
-@router.get('/wordSimilarity/{word1}/{word2}')
+@router.get('/wordSimilarity/{word1}/{word2}', response_model=WordSimilarityResponse)
 async def get_word_similarity(word1: str, word2: str):
     # Call the function to get word information
     score = await asyncio.to_thread(calculate_similarity_score, word1, word2)

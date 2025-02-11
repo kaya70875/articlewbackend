@@ -11,3 +11,6 @@ class WordInfoResponse(BaseModel):
     verb: List[WordInfo]
     noun: List[WordInfo]
     pos : str
+
+class WordSimilarityResponse(BaseModel):
+    score: float
