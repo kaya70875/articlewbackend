@@ -47,7 +47,7 @@ async def analyze_sentence_with_word(sentence : str, word : str, api_key: str) -
 
     return final_answer
 
-async def fix_grammar_errors(sentence : str, api_key : str) -> str:
+async def fix_grammar_errors(sentence : str, api_key : str) -> tuple[str, str]:
     """
     Identify and fix any grammar errors in a sentence. If the sentence is already correct, return the original sentence.
 

@@ -44,14 +44,14 @@ async def analyze_sentence(sentence: str, word: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/grammar/{sentence}", response_model=AIBasicResponse, response_description="Fix all grammar errors in a sentence. Additionally fixing spelling errors or typos.")
+@router.get("/grammar/{sentence}", response_model=FixGrammarResponse, response_description="Fix all grammar errors in a sentence. Additionally fixing spelling errors or typos.")
 async def fix_grammar(sentence : str):
     if not api_key:
         raise HTTPException(status_code=500, detail="API key not configured")
     try:
         sentence = unquote(sentence) # filter out special characters from url like ? , . etc
         results = await fix_grammar_errors(sentence, api_key)
-        return {"response": results}
+        return {"original_sentence": results[0], "corrected_sentence": results[1]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     

@@ -16,3 +16,7 @@ class CompareResponse(BaseModel):
     differences: str
     examples_word1: List[str]
     examples_word2: List[str]
+
+class FixGrammarResponse(BaseModel):
+    original_sentence: str
+    corrected_sentence: str
