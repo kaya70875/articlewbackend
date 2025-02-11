@@ -111,11 +111,6 @@ async def make_httpx_request(api_key : str, messages: list[dict], parameters : O
 
     request_parameters = {**default_parameters, **(parameters or {})}
 
-    # Prepare the request payload
-    if not completion or not completion[0] or not completion[0]["generated_text"]:
-        logger.error("Invalid response from the API")
-        raise ValueError("Invalid response from the API")
-
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -129,6 +124,11 @@ async def make_httpx_request(api_key : str, messages: list[dict], parameters : O
             )
             response.raise_for_status()  # Raise an exception for HTTP errors
             completion = response.json()
+
+            # Prepare the request payload
+            if not completion:
+                logger.error("Invalid response from the API")
+                raise ValueError("Invalid response from the API")
             
             response_text = completion[0]["generated_text"]
             return response_text
