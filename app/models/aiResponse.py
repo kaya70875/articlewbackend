@@ -7,6 +7,10 @@ class ParaphraseModel(BaseModel):
 class AIResults(BaseModel):
     response: str
 
+class AIFeedbackResponse(BaseModel):
+    check : str
+    analysis : str
+
 class CompareResults(BaseModel):
     similarities: str
     differences: str

@@ -12,14 +12,24 @@ api_key = os.getenv('HUGGING_FACE_API_KEY')
 
 router = APIRouter()
 
-@router.get("/generate/{word}", response_model=AIResults, response_description="Check if word is valid and generate a response about how this word is used in a sentence.")
+@router.get("/generate/{word}", response_model=AIFeedbackResponse, response_description="Check if word is valid and generate a response about how this word is used in a sentence.")
 async def generate_response(word: str):
     if not api_key:
         raise HTTPException(status_code=500, detail="API key not configured")
 
     try:
         results = await analyze_word(word, api_key)
-        return {"response": results}
+        
+        if isinstance(results, str):
+            try:
+                parsed_results = json.loads(results)
+                return parsed_results
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=500, detail="Invalid JSON response from AI")
+        
+        else:
+            raise HTTPException(status_code=404, detail="No results found.")
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

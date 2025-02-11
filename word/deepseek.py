@@ -15,7 +15,7 @@ async def analyze_word(word: str, api_key: str) -> str:
     messages = [
         {
             "role": "user",
-            "content": f"Can you analyze the word '{word}' and give an example of its usage? Additionally check if word itself is correct or not. Do not analysis word's origin and please keep it short. Give me a json Here an example json response: {{\"check\": \"'prevent' is a correct and usable word in written English.\",\"analysis\" : \"It can be used to describe a situation in which something bad is avoided from happening. For example: 'Taking precautions helped us prevent the spread of the virus.'\"}}"
+            "content": f"Can you analyze the word '{word}' and give an example of its usage? Do not analysis word's origin and please keep it short. Give me a json Here an example json response: {{\"check\": \"'prevent' is a correct and usable word in written English.\",\"analysis\" : \"It can be used to describe a situation in which something bad is avoided from happening. For example: 'Taking precautions helped us prevent the spread of the virus.'\"}}"
         }
     ]
 
