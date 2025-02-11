@@ -1,17 +1,17 @@
 from pydantic import BaseModel
 from typing import List
 
-class ParaphraseModel(BaseModel):
+class ParaphraseResponse(BaseModel):
     paraphrase: List[str]
 
-class AIResults(BaseModel):
+class AIBasicResponse(BaseModel):
     response: str
 
 class AIFeedbackResponse(BaseModel):
     check : str
     analysis : str
 
-class CompareResults(BaseModel):
+class CompareResponse(BaseModel):
     similarities: str
     differences: str
     examples_word1: List[str]

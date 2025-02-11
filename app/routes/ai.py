@@ -33,7 +33,7 @@ async def generate_response(word: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/analysis/{sentence}/{word}", response_model=AIResults, response_description="Analyze a sentence and generate a response about its grammar structure.")
+@router.get("/analysis/{sentence}/{word}", response_model=AIBasicResponse, response_description="Analyze a sentence and generate a response about its grammar structure.")
 async def analyze_sentence(sentence: str, word: str):
     if not api_key:
         raise HTTPException(status_code=500, detail="API key not configured")
@@ -44,7 +44,7 @@ async def analyze_sentence(sentence: str, word: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/grammar/{sentence}", response_model=AIResults, response_description="Fix all grammar errors in a sentence. Additionally fixing spelling errors or typos.")
+@router.get("/grammar/{sentence}", response_model=AIBasicResponse, response_description="Fix all grammar errors in a sentence. Additionally fixing spelling errors or typos.")
 async def fix_grammar(sentence : str):
     if not api_key:
         raise HTTPException(status_code=500, detail="API key not configured")
@@ -57,7 +57,7 @@ async def fix_grammar(sentence : str):
     
 
 
-@router.get("/paraphrase/{sentence}/{context}" , response_model=ParaphraseModel, response_description="Generate a paraphrase of a sentence.")
+@router.get("/paraphrase/{sentence}/{context}" , response_model=ParaphraseResponse, response_description="Generate a paraphrase of a sentence.")
 async def generate_paraphrase(sentence : str, context: str):
     if not api_key:
         raise HTTPException(status_code=500, detail="API key not configured")
@@ -69,7 +69,7 @@ async def generate_paraphrase(sentence : str, context: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/compare/{word1}/{word2}", response_model=CompareResults, response_description="Compare two words and generate a response about their similarities and differences.")
+@router.get("/compare/{word1}/{word2}", response_model=CompareResponse, response_description="Compare two words and generate a response about their similarities and differences.")
 async def compare(word1: str, word2: str):
     if not api_key:
         raise HTTPException(status_code=500, detail="API key not configured")
