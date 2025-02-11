@@ -125,6 +125,7 @@ pypiwin32==223; sys_platform == "win32"
 pywin32==306; sys_platform == "win32"
 PyRect==0.2.0
 PyScreeze==1.0.1
+pytest-asyncio==0.25.3
 PySocks==1.7.1
 pytest==8.3.4
 python-dateutil==2.9.0.post0
