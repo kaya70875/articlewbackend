@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes.wordInfo import router as wordInfo_route
 import nltk
 import os
+import sys
 
 app = FastAPI()
 
@@ -20,10 +21,13 @@ app.include_router(sentences_route, prefix="/api", tags=["Sentences"])
 app.include_router(ai_route, prefix="/api", tags=["AI"])
 app.include_router(wordInfo_route, prefix="/api", tags=["WordInfo"])
 
-nltk.data.path.clear()
-nltk.data.path.append(os.getenv("NLTK_DATA", "./nltk_data"))
+async def validate_env():
+    if not os.getenv("HUGGING_FACE_API_KEY"):
+        import logging
+        logging.error("HUGGING_FACE_API_KEY is not set in the environment.")
+        sys.exit("Missing HUGGING_FACE_API_KEY")
 
-print("NLTK data path:", nltk.data.path)
+nltk.data.path.append(os.getenv("NLTK_DATA", "./nltk_data"))
 
 # Run the app
 if __name__ == "__main__":
