@@ -2,8 +2,13 @@ import re
 import httpx
 from difflib import SequenceMatcher
 from typing import Optional
+from fastapi import HTTPException
+import logging
 
-def extract_sentence(results, word: str):
+logging.basicConfig(level=logging.ERROR)
+logger = logging.getLogger(__name__)
+
+def extract_sentence(results : list, word: str) -> list:
 
     """
     Extract the sentence that contains the word. This function extract sentences from a text or sentence using a regular expression.
@@ -13,6 +18,7 @@ def extract_sentence(results, word: str):
         word (str): The word to search for in the text.
     
     Returns:
+        list: The list of extracted sentences.
     """
 
     regex = rf'\b[A-Z][^.!?]*?\b{word}\b[^.!?]*[.!?]'
@@ -65,21 +71,21 @@ def highlight_corrections(original : str, corrected : str) -> tuple[str, str]:
     
     return " ".join(original_highlighted), " ".join(corrected_highlighted)
 
-def extract_paraphrase_sentences(results : str, sentence_count : int = 6) -> list:
+def extract_paraphrase_sentences(results : str, num_sentences : int = 5) -> list:
 
     """
     Extract the five paraphrased sentences from the raw text and put it into a list.
 
     Args:
         results (str): The raw text containing the paraphrased sentences. This text coming from AI Agent.
-        sentence_count (int, optional): The number of sentences to extract. Defaults to 6 means 5 sentences. You should also change AI Agent response to return sentences you want to get.
+        num_sentences (int, optional): The number of sentences to extract. Defaults to 6 means 5 sentences. You should also change AI Agent response to return sentences you want to get.
     Returns:
         list: List of paraphrased sentences.
     """
     extracted_list = []
-    for i in range(1,sentence_count):
+    for i in range(1,num_sentences + 1):
         find_first = results.find(f"{i}.")
-        find_next = results.find(f"{i + 1}.")
+        find_next = results.find(f"{i + 1}.") if i < num_sentences else -1
         extract = results[find_first + 3:find_next]
         
         extracted_list.append(extract)
@@ -104,22 +110,32 @@ async def make_httpx_request(api_key : str, messages: list[dict], parameters : O
     }
 
     request_parameters = {**default_parameters, **(parameters or {})}
-    
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            "https://api-inference.huggingface.co/models/deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
-            headers={"Authorization": f"Bearer {api_key}"},
-            json={
-                "inputs": messages[0]["content"],
-                "parameters": request_parameters
-            },
-            timeout=30.0 #Increased timeout
-        )
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        completion = response.json()
 
-        response_text = completion[0]["generated_text"]
-        return response_text
+    # Prepare the request payload
+    if not completion or not completion[0] or not completion[0]["generated_text"]:
+        logger.error("Invalid response from the API")
+        raise ValueError("Invalid response from the API")
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api-inference.huggingface.co/models/deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+                headers={"Authorization": f"Bearer {api_key}"},
+                json={
+                    "inputs": messages[0]["content"],
+                    "parameters": request_parameters
+                },
+                timeout=30.0 #Increased timeout
+            )
+            response.raise_for_status()  # Raise an exception for HTTP errors
+            completion = response.json()
+            
+            response_text = completion[0]["generated_text"]
+            return response_text
+    except httpx.HTTPError as http_err:
+        logger.error(f"HTTP error occurred: {http_err}")
+        raise HTTPException(status_code=500, detail=f"HTTP error occurred: {http_err}")
+        
     
 def parse_AI_response(response_text : str , messages) -> str:
 
@@ -132,6 +148,10 @@ def parse_AI_response(response_text : str , messages) -> str:
         str: The final answer extracted from the AI response.
     
     """
+
+    if not messages[0]["content"]:
+        logger.error("No messages found in the AI response")
+        raise ValueError("No messages found in the response")
 
     if "<think>" or "</think>" in response_text:
         # Split the response text at "</think>" and take the last part
