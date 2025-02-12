@@ -1,4 +1,4 @@
-from utils.helpers import make_httpx_request, highlight_corrections, extract_paraphrase_sentences, parse_AI_response
+from utils.helpers import *
 import asyncio
 
 async def analyze_word(word: str, api_key: str) -> str:
