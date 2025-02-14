@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Path
 from app.models.word_info import *
 from word.wordNet import get_word_info_extended
 import asyncio
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.get("/wordInfo/{word}" , response_model=WordInfoResponse, response_description="Get word info like definition, synonyms, examples")
-async def get_word_info(word: str):
+async def get_word_info(word: str = Path(description="The word to get info about", min_length=1, max_length=30, strip_whitespace=True)):
     try:
         # Call the function to get word information
         word_info = await asyncio.to_thread(get_word_info_extended, word)

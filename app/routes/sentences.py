@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Path
 from app.models.database import sentences_collection
 from utils.helpers import extract_sentence
 from app.error_handlers.decorator import handle_exceptions
@@ -12,7 +12,7 @@ router = APIRouter()
 @router.get("/sentences/{word}")
 @handle_exceptions
 async def get_sentences(
-    word: str,
+    word: str = Path(description="The word to search for in sentences", min_length=1, max_length=200),
     categories: str = Query(None, description="Comma-separated list of categories"),
     min_length: int = Query(None, description="Minimum sentence length"),
     max_length: int = Query(None, description="Maximum sentence length"),
