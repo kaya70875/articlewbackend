@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, Path
 from app.models.database import sentences_collection
-from utils.helpers import extract_sentence
+from app.utils.helpers import extract_sentence
 from app.error_handlers.decorator import handle_exceptions
 import logging
 

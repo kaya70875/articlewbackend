@@ -1,4 +1,4 @@
-from utils.helpers import *
+from app.utils.helpers import *
 import asyncio
 
 async def analyze_word(word: str, api_key: str) -> str:
