@@ -82,11 +82,14 @@ def extract_paraphrase_sentences(results : str, num_sentences : int = 5) -> list
     Returns:
         list: List of paraphrased sentences.
     """
+
     extracted_list = []
     for i in range(1,num_sentences + 1):
+        if(results[0] != "1"):
+            raise ValueError("AI Agent response is not correct. Please check your prompt.")
         find_first = results.find(f"{i}.")
-        find_next = results.find(f"{i + 1}.") if i < num_sentences else -1
-        extract = results[find_first + 3:find_next]
+        find_next = results.find(f"{i + 1}.") if i < num_sentences else None
+        extract = results[find_first + 3:find_next].strip()
         
         extracted_list.append(extract)
     
