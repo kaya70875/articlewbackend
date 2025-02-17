@@ -23,7 +23,7 @@ def test_response_without_think_tags():
     response_text = "Final answer"
 
     result = parse_AI_response(response_text, messages)
-    assert result == "Final answer"
+    assert result == "Final answerss"
 
 def test_response_with_multiple_think_tags():
     messages = [{'content': 'Original message'}]
