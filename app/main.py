@@ -1,13 +1,19 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from app.routes.sentences import router as sentences_route
 from app.routes.ai import router as ai_route
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.wordInfo import router as wordInfo_route
+from app.error_handlers.handlers import setup_exception_handlers
 import nltk
 import os
 import sys
 
+
 app = FastAPI()
+
+#Setup all exception handlers
+setup_exception_handlers(app)
 
 app.add_middleware(
     CORSMiddleware,
