@@ -5,6 +5,7 @@ import json
 from fastapi.responses import JSONResponse
 from fastapi import Request
 from pymongo.errors import ConnectionFailure
+from httpx import ReadTimeout
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,6 @@ async def http_exception_handler(request : Request, exc:httpx.HTTPError):
         status_code=500,
         content={'detail' : f'Http error occured {exc}'}
     )
-
 @register_exception_handler(json.JSONDecodeError)
 async def json_decode_error_handler(request : Request, exc:json.JSONDecodeError):
     logger.error(f'Invalid json data {exc}')
@@ -34,7 +34,6 @@ async def json_decode_error_handler(request : Request, exc:json.JSONDecodeError)
         status_code=400,
         content={'detail' : f'Invalid json data {exc}'}
     )
-
 @register_exception_handler(KeyError)
 async def key_error_handler(request : Request, exc:KeyError):
     logger.error(f'Invalid key {exc}')
@@ -48,6 +47,13 @@ async def database_connection_error_handler(request : Request, exc: ConnectionFa
     return JSONResponse(
         status_code=400,
         content = {'detail' : f'Database connection failed! {exc}'}
+    )
+@register_exception_handler(ReadTimeout)
+async def timeout_error_handler(request : Request, exc: ReadTimeout):
+    logger.error(f'Request timed out {exc}')
+    return JSONResponse(
+        status_code=408,
+        content={f'Request timed out {exc}'}
     )
 
 def setup_exception_handlers(app):
