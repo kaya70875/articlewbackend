@@ -4,7 +4,6 @@ from word.wordNet import get_word_info_extended
 import asyncio
 import logging
 from word.spacyWord import calculate_similarity_score
-from app.error_handlers.decorator import handle_exceptions
 
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -28,7 +27,6 @@ async def get_word_info(word: str = Path(description="The word to get info about
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @router.get('/wordSimilarity/{word1}/{word2}', response_model=WordSimilarityResponse, response_description="Get a similarity score between two words")
-@handle_exceptions
 async def get_word_similarity(inputs : WordSimilarityRequest = Depends()):
     #Validete inputs
     if inputs.word1 == inputs.word2:
