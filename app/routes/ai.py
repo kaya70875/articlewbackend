@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 import os
 from urllib.parse import unquote
 import json
-from app.error_handlers.decorator import handle_exceptions
 import logging
 
 logging.basicConfig(level=logging.ERROR)
@@ -18,24 +17,18 @@ api_key = os.getenv('HUGGING_FACE_API_KEY')
 router = APIRouter()
 
 @router.get("/generate/{word}", response_model=AIFeedbackResponse, response_description="Check if word is valid and generate a response about how this word is used in a sentence.")
-@handle_exceptions
 async def generate_response(word: str = Path(description="The word to generate a response about", min_length=1, max_length=30)):
     results = await analyze_word(word, api_key)
         
     if isinstance(results, str):
-        try:
-            parsed_results = json.loads(results.strip("```json").strip("```").strip())
-            return parsed_results
-        except json.JSONDecodeError:
-            logging.error("Invalid JSON response from AI")
-            raise HTTPException(status_code=500, detail="Invalid JSON response from AI")
-        
+        parsed_results = json.loads(results.strip("```json").strip("```").strip())
+        return parsed_results
+
     else:
         logger.warning('Response from AI is not a string or it is empty')
         raise HTTPException(status_code=404, detail="No results found.")
 
 @router.get("/analysis/{sentence}/{word}", response_model=AIBasicResponse, response_description="Analyze a sentence and generate a response about its grammar structure.")
-@handle_exceptions
 async def analyze_sentence(
     sentence: str = Path(description="The sentence to analyze", min_length=1, max_length=400),
     word: str = Path(description="The word to analyze", min_length=1, max_length=30),):
@@ -45,7 +38,6 @@ async def analyze_sentence(
     return {"response": results}
 
 @router.get("/grammar/{sentence}", response_model=FixGrammarResponse, response_description="Fix all grammar errors in a sentence. Additionally fixing spelling errors or typos.")
-@handle_exceptions
 async def fix_grammar(sentence : str = Path(description="The sentence to fix", min_length=1, max_length=500)):
     sentence = unquote(sentence) # filter out special characters from url like ? , . etc
     results = await fix_grammar_errors(sentence, api_key)
@@ -54,7 +46,6 @@ async def fix_grammar(sentence : str = Path(description="The sentence to fix", m
 
 
 @router.get("/paraphrase/{sentence}/{context}" , response_model=ParaphraseResponse, response_description="Generate a paraphrase of a sentence.")
-@handle_exceptions
 async def generate_paraphrase(
     sentence : str = Path(description="The sentence to paraphrase", min_length=1, max_length=200),
     context: Literal['Casual', 'Formal', 'Sortened', 'Extended', 'Academic'] = Path(description="Context for the paraphrase", min_length=1, max_length=20),
@@ -65,7 +56,6 @@ async def generate_paraphrase(
     return {"paraphrase": results}
 
 @router.get("/compare/{word1}/{word2}", response_model=CompareResponse, response_description="Compare two words and generate a response about their similarities and differences.")
-@handle_exceptions
 async def compare(
     word1: str = Path(description="The first word to compare", min_length=1, max_length=30),
     word2: str = Path(description="The second word to compare", min_length=1, max_length=30),
@@ -79,7 +69,7 @@ async def compare(
             return parsed_results # ✅ Return structured JSON directly
         except json.JSONDecodeError:
             logger.error('Invalid JSON response from AI')
-            raise HTTPException(status_code=500, detail='Invalid JSON response from API')
+            raise HTTPException(status_code=400, detail='Invalid JSON response from API')
         
     else:
         logger.warning('Response from AI is not a string or it is empty')
