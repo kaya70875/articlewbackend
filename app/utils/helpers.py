@@ -4,6 +4,7 @@ from difflib import SequenceMatcher
 from typing import Optional
 from fastapi import HTTPException
 import logging
+import json
 
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -114,30 +115,31 @@ async def make_httpx_request(api_key : str, messages: list[dict], parameters : O
 
     request_parameters = {**default_parameters, **(parameters or {})}
 
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                "https://api-inference.huggingface.co/models/deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
-                headers={"Authorization": f"Bearer {api_key}"},
-                json={
-                    "inputs": messages[0]["content"],
-                    "parameters": request_parameters
-                },
-                timeout=30.0 #Increased timeout
-            )
-            response.raise_for_status()  # Raise an exception for HTTP errors
-            completion = response.json()
+    if not messages[0]["content"]:
+        logger.error("No messages found in the AI response")
+        raise ValueError("No messages found in the response")
 
-            # Prepare the request payload
-            if not completion:
-                logger.error("Invalid response from the API")
-                raise ValueError("Invalid response from the API")
-            
-            response_text = completion[0]["generated_text"]
-            return response_text
-    except httpx.HTTPError as http_err:
-        logger.error(f"HTTP error occurred: {http_err}")
-        raise HTTPException(status_code=500, detail=f"HTTP error occurred: {http_err}")
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://api-inference.huggingface.co/models/deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+            headers={"Authorization": f"Bearer {api_key}"},
+            json={
+                "inputs": messages[0]["content"],
+                "parameters": request_parameters
+            },
+            timeout=30.0 #Increased timeout
+        )
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        completion = response.json()
+
+        # Prepare the request payload
+        if not completion:
+            logger.error("Invalid response from the API")
+            raise ValueError("Invalid response from the API")
+        
+        response_text = completion[0]["generated_text"]
+        return response_text
         
     
 def parse_AI_response(response_text : str , messages) -> str:
@@ -151,7 +153,6 @@ def parse_AI_response(response_text : str , messages) -> str:
         str: The final answer extracted from the AI response.
     
     """
-
     if not messages[0]["content"]:
         logger.error("No messages found in the AI response")
         raise ValueError("No messages found in the response")
@@ -159,7 +160,7 @@ def parse_AI_response(response_text : str , messages) -> str:
     if "<think>" or "</think>" in response_text:
         # Split the response text at "</think>" and take the last part
         final_answer = response_text.split("</think>")[-1].strip()
-    
+        
         # Remove any remaining tags or unwanted text
         final_answer = final_answer.replace("<think>", "").strip()
     else:
