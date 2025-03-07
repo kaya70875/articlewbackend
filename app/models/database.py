@@ -1,9 +1,12 @@
 from pymongo import MongoClient, errors
 import os
 from dotenv import load_dotenv
+import logging
 
 # Load environment variables from .env file
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 # Retrieve environment variables
 mongo_uri = os.getenv('DATABASE_URI')
@@ -20,5 +23,6 @@ try:
     sentences_collection = db['sentences']  # Access the sentences collection
 
     print("Database connection successful")
-except errors.PyMongoError as e:
-    print(f"Database connection failed: {e}")
+except errors.ConnectionFailure as exc:
+    logger.error(f'Database connection failed. {exc}')
+
