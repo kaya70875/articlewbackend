@@ -16,7 +16,6 @@ async def get_user_id(credentials: Annotated[str, Depends(security)], provider :
     token = credentials.credentials
         
     if provider == 'credentials':
-        print('credentials!!!')
         user_id = await extract_id_from_jwt(token)
         return user_id
     else:

@@ -30,8 +30,6 @@ USER_LIMITS = {
     }
 }
 
-#TODO Reset usage limits after one day.
-
 def get_user_tier(user_id : str) -> str:
     """
     Retrieve user type (basic, medium, premium) from the users collection.
@@ -63,9 +61,24 @@ def check_request_limit(user_id : str, request_type : str):
                 'paraphraseReq' : 0,
                 'fixSentenceReq' : 0,
                 'compareWordsReq' : 0,
-                'reset_date' : datetime.now() + timedelta(days=1) # Reset in one days
+                'reset_date' : datetime.now() + timedelta(minutes=1.5)
             })
             return
+
+        #Reset all requests if reset_date expired.
+        reset_date = metrics['reset_date']
+
+        if reset_date <= datetime.now():
+            metrics_collection.update_one(
+                {"_id" : ObjectId(user_id)},
+                {"$set" : {
+                    'generateReq' : 0,
+                    'paraphraseReq' : 0,
+                    'fixSentenceReq' : 0,
+                    'compareWordsReq' : 0,
+                    'reset_date' : datetime.now() + timedelta(minutes=1.5)
+                }}
+            )
 
         #Check if user exceed the limit
         limits = USER_LIMITS.get(user_tier, USER_LIMITS['basic'])
