@@ -1,8 +1,11 @@
-from fastapi import APIRouter, HTTPException, Query, Path
+from fastapi import APIRouter, HTTPException, Query, Path, Depends
 from app.models.database import sentences_collection
 from app.utils.helpers import extract_sentence
 from pymongo.errors import CursorNotFound
 import logging
+from app.user.user import check_request_limit
+from typing import Annotated
+from app.user.extract_jwt_token import get_user_id
 
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -11,6 +14,7 @@ router = APIRouter()
 
 @router.get("/sentences/{word}")
 async def get_sentences(
+    user_id : Annotated[str, Depends(get_user_id)],
     word: str = Path(description="The word to search for in sentences", min_length=1, max_length=200),
     categories: str = Query(None, description="Comma-separated list of categories"),
     min_length: int = Query(None, description="Minimum sentence length"),
@@ -18,11 +22,14 @@ async def get_sentences(
     sort_by: str = Query(None, description="Sort field (e.g., 'length' or 'created_at')"),
     order: str = Query("asc", description="Sort order: 'asc' for ascending, 'desc' for descending"),
     page: int = Query(1, description="Page number"),
-    page_size: int = Query(10, description="Number of items per page")
+    page_size: int = Query(10, description="Number of items per page"),
 ):
     """
     Get sentences containing the word, optionally filtered by categories, length, and sorted.
     """
+
+    #Check for request limit for specific user and route
+    check_request_limit(user_id, 'generateReq')
 
     try:
         # Base filter to search for the word in sentences
