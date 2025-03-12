@@ -4,6 +4,7 @@ from pymongo.errors import WriteError
 import logging
 from datetime import datetime, timedelta
 from fastapi import HTTPException
+from pymongo import ReturnDocument
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,9 @@ def get_user_tier(user_id : str) -> str:
         logger.error(f'Error while accessing attr ${attr_err}')
         raise HTTPException(status_code=400, detail=f'Error while accessing attr ${attr_err}')
 
+#TODO Consider handling all actions in one atomic way instead of if else block.
+#TODO User have to relogin when token expired. Fix this.
+
 def check_request_limit(user_id : str, request_type : str):
 
     """
@@ -48,45 +52,37 @@ def check_request_limit(user_id : str, request_type : str):
     """
 
     user_tier = get_user_tier(user_id).lower()
+    now = datetime.now()
 
     try:
         metrics = metrics_collection.find_one({'_id' : ObjectId(user_id)})
         print('metrics', metrics)
         
-        if not metrics:
+        if not metrics or metrics.get('reset_date', now) <= now:
+            print('hey')
             #If no record, create a new with reset time
-            metrics_collection.insert_one({
-                '_id' : ObjectId(user_id),
-                'generateReq' : 0,
-                'paraphraseReq' : 0,
-                'fixSentenceReq' : 0,
-                'compareWordsReq' : 0,
-                'reset_date' : datetime.now() + timedelta(minutes=1.5)
-            })
-            return
-
-        #Reset all requests if reset_date expired.
-        reset_date = metrics['reset_date']
-
-        if reset_date <= datetime.now():
-            metrics_collection.update_one(
+            updated_metrics = metrics_collection.find_one_and_update(
                 {"_id" : ObjectId(user_id)},
                 {"$set" : {
                     'generateReq' : 0,
                     'paraphraseReq' : 0,
                     'fixSentenceReq' : 0,
                     'compareWordsReq' : 0,
-                    'reset_date' : datetime.now() + timedelta(minutes=1.5)
-                }}
-            )
-
+                    'reset_date' : now + timedelta(minutes=1.5)
+                }},
+                upsert=True,
+                return_document=ReturnDocument.AFTER
+                )
+        else : 
+            updated_metrics = metrics
+            
         #Check if user exceed the limit
         limits = USER_LIMITS.get(user_tier, USER_LIMITS['basic'])
-        if metrics[request_type] >= limits[request_type]:
+        if updated_metrics[request_type] >= limits[request_type]:
             logger.info('Request limit exceeded.')
-            raise HTTPException(f'Request limit exceed. {request_type}')
+            raise HTTPException(status_code=402, detail=f'Request limit exceed. {request_type}. Payment Required.')
 
-        #Increase request count
+        #Increase request count if user has request limit
         metrics_collection.update_one({'_id' : ObjectId(user_id) }, {"$inc" : {request_type : 1}})
 
     except WriteError as write_err:
@@ -96,7 +92,7 @@ def check_request_limit(user_id : str, request_type : str):
         logger.error(f'Error while getting current plan or request type {v_err}')
         raise HTTPException(status_code=400, detail=f'Error while getting current plan or request type {v_err}')
     except AttributeError as attr_err:
-        logger.error(f'Error while accessing attr ${attr_err}')
-        raise HTTPException(status_code=400, detail=f'Error while accessing attr ${attr_err}')
+        logger.error(f'Error while accessing attr in reqeust limit ${attr_err}')
+        raise HTTPException(status_code=400, detail=f'Error while accessing attr in request limit ${attr_err}')
 
 
