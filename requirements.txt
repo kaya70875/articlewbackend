@@ -124,6 +124,11 @@ pyperclip==1.9.0
 pypiwin32==223; sys_platform == "win32"
 pywin32==306; sys_platform == "win32"
 PyRect==0.2.0
+ecdsa==0.19.1
+fastapi-nextauth-jwt==2.0.1
+pyasn1==0.4.8
+python-jose==3.4.0
+rsa==4.9
 PyScreeze==1.0.1
 pytest-asyncio==0.25.3
 PySocks==1.7.1
