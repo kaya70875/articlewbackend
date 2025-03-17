@@ -127,6 +127,7 @@ PyRect==0.2.0
 ecdsa==0.19.1
 fastapi-nextauth-jwt==2.0.1
 pyasn1==0.4.8
+pyasn1_modules==0.4.0
 python-jose==3.4.0
 rsa==4.9
 PyScreeze==1.0.1
