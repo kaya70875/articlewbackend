@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
 load_dotenv()
-api_key = os.getenv('HUGGING_FACE_API_KEY')
+api_key = os.getenv('DEEPSEEK_API_KEY')
 
 router = APIRouter()
 
