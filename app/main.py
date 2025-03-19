@@ -15,8 +15,7 @@ setup_exception_handlers(app)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=["http://localhost:3000", 'https://learn-with-articles-next.vercel.app/'],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -37,4 +36,4 @@ nltk.data.path.append(os.getenv("NLTK_DATA", "./nltk_data"))
 # Run the app
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="localhost", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
