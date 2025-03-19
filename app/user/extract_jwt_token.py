@@ -1,25 +1,20 @@
-from app.user.utils.helpers import *
-from fastapi_nextauth_jwt import NextAuthJWTv4
+from fastapi.security import HTTPBearer
+from fastapi import Depends, Header
 from typing import Annotated
-from fastapi import Depends, HTTPException
-import os
+from app.user.utils.helpers import *
+from typing import Literal
 
-SECRET_KEY = os.getenv('JWT_SECRET')
-JWT = NextAuthJWTv4(secret=SECRET_KEY)
+security = HTTPBearer(
+    description="Enter your JWT token from Next Auth"
+)
 
-async def get_user_id(jwt : Annotated[dict, Depends(JWT)]):
-    """
-    Gets user's details with decoding jwt token.
-    """
+async def get_user_id(credentials: Annotated[str, Depends(security)], provider : Literal['google', 'credentials'] = Header(None, alias='X-Provider')):
+    # Get token from credentials
+    token = credentials.credentials
 
-    provider = jwt['provider']
-    
     if provider == 'credentials':
-        user_id = jwt.get('id')
-        if not user_id:
-            raise HTTPException(status_code=401, detail='User id cannot found in token.')
+        user_id = await extract_id_from_jwt(token)
         return user_id
     else:
-        email = jwt.get('email')
-        user_id = await extract_id_from_email(email)
+        user_id = await extract_id_from_email(token)
         return user_id
