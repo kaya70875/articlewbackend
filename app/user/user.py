@@ -12,22 +12,28 @@ metrics_collection = db['userMetrics']
 
 USER_LIMITS = {
     "basic": {
-        "generateReq": 5,
+        "sentenceReq" : 30,
+        "generateReq": 7,
+        "grammarReq" : 7,
         "paraphraseReq": 5,
         "fixSentenceReq": 5,
         "compareWordsReq": 5
     },
     "medium": {
-        "generateReq": 10,
-        "paraphraseReq": 10,
-        "fixSentenceReq": 10,
-        "compareWordsReq": 10
+        "sentenceReq" : 100,
+        "generateReq": 20,
+        "grammarReq" : 20,
+        "paraphraseReq": 12,
+        "fixSentenceReq": 12,
+        "compareWordsReq": 12
     },
     "premium": {
-        "generateReq": 20,
-        "paraphraseReq": 20,
-        "fixSentenceReq": 20,
-        "compareWordsReq": 20
+        "sentenceReq" : 1000,
+        "generateReq": 50,
+        "grammarReq" : 50,
+        "paraphraseReq": 50,
+        "fixSentenceReq": 50,
+        "compareWordsReq": 50
     }
 }
 
@@ -43,7 +49,6 @@ def get_user_tier(user_id : str) -> str:
         raise HTTPException(status_code=400, detail=f'Error while accessing attr ${attr_err}')
 
 #TODO Consider handling all actions in one atomic way instead of if else block.
-#TODO User have to relogin when token expired. Fix this.
 
 def check_request_limit(user_id : str, request_type : str):
 
@@ -56,19 +61,20 @@ def check_request_limit(user_id : str, request_type : str):
 
     try:
         metrics = metrics_collection.find_one({'_id' : ObjectId(user_id)})
-        print('metrics', metrics)
+        #print('metrics', metrics)
         
         if not metrics or metrics.get('reset_date', now) <= now:
-            print('hey')
             #If no record, create a new with reset time
             updated_metrics = metrics_collection.find_one_and_update(
                 {"_id" : ObjectId(user_id)},
                 {"$set" : {
+                    'sentenceReq' : 0,
                     'generateReq' : 0,
+                    'grammarReq' : 0,
                     'paraphraseReq' : 0,
                     'fixSentenceReq' : 0,
                     'compareWordsReq' : 0,
-                    'reset_date' : now + timedelta(minutes=1.5)
+                    'reset_date' : now + timedelta(days=1) # Reset request limits after one day.
                 }},
                 upsert=True,
                 return_document=ReturnDocument.AFTER
