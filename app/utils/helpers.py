@@ -96,6 +96,44 @@ def extract_paraphrase_sentences(results : str, num_sentences : int = 5) -> list
     
     return extracted_list
 
+def get_chat_completion(api_key: str, content: dict, temperature: int = 1.3):
+    """
+    Get a chat completion response from the DeepSeek AI model.
+
+    Args:
+        api_key (str): The API key for authentication with the DeepSeek API.
+        messages (list[dict]): A list of message dictionaries containing the conversation history.
+
+    Returns:
+        str: The content of the AI's response to the provided messages.
+    """
+    
+    from openai import OpenAI
+
+    try:
+        client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {
+                    "role" : "system",
+                    "content" : "You are a helpful assistant."
+                },
+                content
+            ],
+            temperature=temperature,
+            stream=False
+        )
+
+        if not response:
+            raise HTTPException(status_code=500, detail='Response from AI is not valid.')
+
+        return response.choices[0].message.content
+    except Exception as e:
+        logger.error(f'Error while getting chat completion {e}')
+        raise HTTPException(status_code=500, detail=f'Error while getting chat completion {e}')
+
 async def make_httpx_request(api_key : str, messages: list[dict], parameters : Optional[dict] = None) -> str:
 
     """Make a request to the Hugging Face inference API.
@@ -141,7 +179,6 @@ async def make_httpx_request(api_key : str, messages: list[dict], parameters : O
         response_text = completion[0]["generated_text"]
         return response_text
         
-    
 def parse_AI_response(response_text : str , messages) -> str:
 
     """
