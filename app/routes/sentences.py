@@ -29,7 +29,7 @@ async def get_sentences(
     """
 
     #Check for request limit for specific user and route
-    check_request_limit(user_id, 'generateReq')
+    check_request_limit(user_id, 'sentenceReq')
 
     try:
         # Base filter to search for the word in sentences
