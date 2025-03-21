@@ -11,7 +11,6 @@ security = HTTPBearer(
 async def get_user_id(credentials: Annotated[str, Depends(security)], provider : Literal['google', 'credentials'] = Header(None, alias='X-Provider')):
     # Get token from credentials
     token = credentials.credentials
-    print('cred token', token)
 
     if provider == 'credentials':
         user_id = await extract_id_from_jwt(token)
