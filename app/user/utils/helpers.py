@@ -33,6 +33,9 @@ async def extract_id_from_jwt(token : str):
 
 async def extract_id_from_email(token : str):
     import requests
+
+    print(f'Got oauth token {token}')
+
     try:
         res = requests.get(
         "https://www.googleapis.com/oauth2/v3/userinfo",
@@ -40,6 +43,7 @@ async def extract_id_from_email(token : str):
         )
 
         response = res.json()
+        print('response', response)
         email = response['email']
 
         currentUser = db['users'].find_one({'email' : email})

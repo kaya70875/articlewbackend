@@ -26,10 +26,10 @@ app.include_router(ai_route, prefix="/api", tags=["AI"])
 app.include_router(wordInfo_route, prefix="/api", tags=["WordInfo"])
 
 async def validate_env():
-    if not os.getenv("HUGGING_FACE_API_KEY"):
+    if not os.getenv("DEEPSEEK_FACE_API_KEY"):
         import logging
-        logging.error("HUGGING_FACE_API_KEY is not set in the environment.")
-        sys.exit("Missing HUGGING_FACE_API_KEY")
+        logging.error("DEEPSEEK_FACE_API_KEY is not set in the environment.")
+        sys.exit("Missing DEEPSEEK_FACE_API_KEY")
 
 nltk.data.path.append(os.getenv("NLTK_DATA", "./nltk_data"))
 
