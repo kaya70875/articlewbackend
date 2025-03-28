@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from app.models.database import db
 from json import JSONDecodeError
 import logging
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -31,25 +32,32 @@ async def extract_id_from_jwt(token : str):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-async def extract_id_from_email(token : str):
-    import requests
+async def extract_id_from_email(token: str):
     try:
-        res = requests.get(
-        "https://www.googleapis.com/oauth2/v3/userinfo",
-        headers={"Authorization": f"Bearer {token}"}
-        )
+        async with httpx.AsyncClient() as client:
+            res = await client.get(
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                headers={"Authorization": f"Bearer {token}"}
+            )
+
+        if res.status_code != 200:
+            logger.error(f"Error fetching user info: {res.status_code} - {res.text}")
+            raise HTTPException(status_code=res.status_code, detail="Failed to fetch user info")
 
         response = res.json()
         email = response['email']
 
-        currentUser = db['users'].find_one({'email' : email})
+        currentUser = db['users'].find_one({'email': email})
         user_id = currentUser.get('_id')
 
         return user_id
+    except httpx.HTTPStatusError as http_err:
+        logger.error(f'HTTP error: {http_err}')
+        raise HTTPException(status_code=http_err.response.status_code, detail=str(http_err))
     except JSONDecodeError as json_err:
-        logger.error(f'Invalid json structure from request object ${json_err}')
-        raise HTTPException(status_code=400, detail=f'Invalid json structure from request object ${json_err}')
+        logger.error(f'Invalid json structure from request object: {json_err}')
+        raise HTTPException(status_code=400, detail=f'Invalid json structure from request object: {json_err}')
     except ValueError as v_err:
-        logger.error(f'Value error ${v_err}')
-        raise HTTPException(status_code=400, detail=f'Value error ${v_err}')
+        logger.error(f'Value error: {v_err}')
+        raise HTTPException(status_code=400, detail=f'Value error: {v_err}')
 
