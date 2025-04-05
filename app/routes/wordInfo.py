@@ -15,13 +15,17 @@ async def get_word_info(word: str = Path(description="The word to get info about
     try:
         # Call the function to get word information
         word_info = await asyncio.to_thread(get_word_info_extended, word)
-        if word_info['pos'] is None:
+        if word_info.get('pos') is None:
             logger.error(f"Word not found! : {word}")
             raise HTTPException(status_code=404, detail="Word not found.")
         return word_info
     except LookupError:
         logger.error(f"NLTK data not found!")
         raise HTTPException(status_code=404, detail="NTLK Data not found.")
+    
+    except HTTPException as http_exc:
+        raise http_exc
+
     except Exception as e:
         logger.error(f"Unexpected error occurred! : {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
