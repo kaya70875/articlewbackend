@@ -25,7 +25,8 @@ async def extract_id_from_jwt(token : str):
             )
                 
         return user_id
-    except jwt.PyJWTError:
+    except jwt.PyJWTError as py_err:
+        logger.error(f'Invalid authentication credentials. Details: ${py_err}')
         raise HTTPException(
             status_code=401,
             detail="Invalid authentication credentials",
