@@ -57,7 +57,7 @@ async def fix_grammar(user_id : Annotated[str, Depends(get_user_id)], sentence :
 
     sentence = unquote(sentence) # filter out special characters from url like ? , . etc
     results = await fix_grammar_errors(sentence, api_key)
-    return {"original_sentence": results[0], "corrected_sentence": results[1]}
+    return {"original_sentence": results[0], "corrected_sentence": results[1], "raw_sentence": results[2]}
     
 
 

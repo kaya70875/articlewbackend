@@ -62,7 +62,7 @@ async def fix_grammar_errors(sentence : str, api_key : str) -> tuple[str, str]:
     # Extract the corrected texts from the response
     original_text, corrected_text = await asyncio.to_thread(highlight_corrections, sentence, response_text)
 
-    return original_text, corrected_text
+    return original_text, corrected_text, response_text # TIP: Return response_text as plain text so we do not have to extract span contents from our frontend.
 
 async def paraphrase(sentence : str, api_key : str, context: str = 'casual') -> list:
     """

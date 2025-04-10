@@ -20,3 +20,4 @@ class CompareResponse(BaseModel):
 class FixGrammarResponse(BaseModel):
     original_sentence: str
     corrected_sentence: str
+    raw_sentence: str
