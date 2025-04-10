@@ -14,7 +14,7 @@ async def analyze_word(word: str, api_key: str) -> str:
     """
     content = {
             "role": "user",
-            "content": f"Can you analyze the word '{word}' and give an example of its usage? Do not analysis word's origin and please keep it short. Give me a json Here an example json response: {{\"check\": \"'prevent' is a correct and usable word in written English.\",\"analysis\" : \"It can be used to describe a situation in which something bad is avoided from happening. For example: 'Taking precautions helped us prevent the spread of the virus.'\"}}"
+            "content": f"Analyze '{word}' and give an example of its usage. Return a json like this: {{\"check\": \"'prevent' is a correct and usable word in written English.\",\"analysis\" : \"It can be used to describe a situation in which something bad is avoided from happening. For example: 'Taking precautions helped us prevent the spread of the virus.'\"}}"
         }
 
     response_text = await asyncio.to_thread(get_chat_completion, api_key, content)
@@ -54,7 +54,7 @@ async def fix_grammar_errors(sentence : str, api_key : str) -> tuple[str, str]:
      
     content = {
             "role": "user",
-            "content": f"Identify and fix any grammar errors in the following sentence '{sentence}'. If the sentence is already correct, say nothing to fix. Provide the corrected version in plain text without additional explanations. Return only corrected sentence."
+            "content": f"Identify and fix any grammar errors for '{sentence}'. If the sentence is already correct, say nothing to fix. Provide the corrected version in plain text without additional explanations. Return only corrected sentence."
     }
 
     response_text = await asyncio.to_thread(get_chat_completion, api_key, content)
@@ -77,7 +77,7 @@ async def paraphrase(sentence : str, api_key : str, context: str = 'casual') -> 
     """
     content = {
             "role": "user",
-            "content": f"Paraphrase the following sentence in a {context} way '{sentence}'. Give me five different examples and provide only examples, in plain text without additional explanations. Lastly number the examples."
+            "content": f"Paraphrase '{sentence}' in a {context} way. Return five different examples in plain text without additional explanations. Lastly number the examples."
         }
 
     response_text = await asyncio.to_thread(get_chat_completion, api_key, content)
@@ -100,7 +100,7 @@ async def compare_words(word_1 : str, word_2 : str, api_key : str) -> str:
 
     content = {
             "role": "user",
-            "content": f"Compare the words '{word_1}' and '{word_2}'. Explain their similarities and differences. Provide example sentences for each. Format the response as valid JSON with the following structure: {{ \"similarities\": \"...\", \"differences\": \"...\", \"examples_word1\": [\"...\"], \"examples_word2\": [\"...\"] }}."
+            "content": f"Compare '{word_1}' and '{word_2}'. Explain their similarities and differences. Format the response as valid JSON with the following structure: {{ \"similarities\": \"...\", \"differences\": \"...\", \"examples_word1\": [\"...\"], \"examples_word2\": [\"...\"] }}."
         }
 
     response_text = await asyncio.to_thread(get_chat_completion, api_key, content)
