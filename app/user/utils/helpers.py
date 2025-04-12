@@ -38,8 +38,10 @@ async def extract_id_from_email(token: str):
         async with httpx.AsyncClient() as client:
             res = await client.get(
                 "https://www.googleapis.com/oauth2/v3/userinfo",
-                headers={"Authorization": f"Bearer {token}"}
+                headers={"Authorization": f"Bearer {token}"},
+                timeout=45.0
             )
+            
 
         if res.status_code != 200:
             logger.error(f"Error fetching user info: {res.status_code} - {res.text}")
@@ -47,8 +49,11 @@ async def extract_id_from_email(token: str):
 
         response = res.json()
         email = response['email']
-
+        
         currentUser = db['users'].find_one({'email': email})
+
+        if not currentUser:
+            raise HTTPException(status_code=404, detail="User not found in DB")
         user_id = currentUser.get('_id')
 
         return user_id
