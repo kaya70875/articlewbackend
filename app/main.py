@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from app.routes.sentences import router as sentences_route
 from app.routes.ai import router as ai_route
+from app.routes.stripe.server import router as stripe_route
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.wordInfo import router as wordInfo_route
 from app.error_handlers.handlers import setup_exception_handlers
@@ -24,6 +25,7 @@ app.add_middleware(
 app.include_router(sentences_route, prefix="/api", tags=["Sentences"])
 app.include_router(ai_route, prefix="/api", tags=["AI"])
 app.include_router(wordInfo_route, prefix="/api", tags=["WordInfo"])
+app.include_router(stripe_route, prefix="/api", tags=["Stripe"])
 
 async def validate_env():
     if not os.getenv("DEEPSEEK_FACE_API_KEY"):
