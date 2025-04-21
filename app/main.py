@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.routes.sentences import router as sentences_route
 from app.routes.ai import router as ai_route
-from app.routes.stripe.server import router as stripe_route
+from app.routes.paddle.server import router as paddle_route
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.wordInfo import router as wordInfo_route
 from app.error_handlers.handlers import setup_exception_handlers
@@ -25,13 +25,13 @@ app.add_middleware(
 app.include_router(sentences_route, prefix="/api", tags=["Sentences"])
 app.include_router(ai_route, prefix="/api", tags=["AI"])
 app.include_router(wordInfo_route, prefix="/api", tags=["WordInfo"])
-app.include_router(stripe_route, prefix="/api", tags=["Stripe"])
+app.include_router(paddle_route, prefix="/api", tags=["Paddle"])
 
 async def validate_env():
-    if not os.getenv("DEEPSEEK_FACE_API_KEY"):
+    if not os.getenv("DEEPSEEK_API_KEY"):
         import logging
-        logging.error("DEEPSEEK_FACE_API_KEY is not set in the environment.")
-        sys.exit("Missing DEEPSEEK_FACE_API_KEY")
+        logging.error("DEEPSEEK_API_KEY is not set in the environment.")
+        sys.exit("Missing DEEPSEEK_API_KEY")
 
 nltk.data.path.append(os.getenv("NLTK_DATA", "./nltk_data"))
 
