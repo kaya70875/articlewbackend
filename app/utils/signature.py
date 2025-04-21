@@ -29,7 +29,7 @@ def verify_paddle_signature(headers: dict, body: bytes) -> bool:
     if abs(time.time() - int(ts)) > 5:
         return False
 
-    signed_payload = f'{ts}:{body.decode('utf-8', errors='ignore')}'
+    signed_payload = f"{ts}:{body.decode('utf-8', errors='ignore')}"
 
     computed_h1 = hmac.new(
     key=webhook_secret.encode('utf-8'),
