@@ -22,7 +22,7 @@ async def handleSubscriptionCreated(data: dict):
         users_collection = db.get_collection('users')
         await users_collection.find_one_and_update(
             {"email": customer_email},
-            {"$set": {"subscription_status": True,
+            {"$set": {"subscription_status": 'active',
                     "userType": package_name,
                     "subscription_id": sub_id,
                     }},
@@ -46,7 +46,7 @@ async def handleSubscriptionCanceled(data: dict):
 
         await users_collection.find_one_and_update(
             {"email": customer_email},
-            {"$set": {"subscription_status": False,
+            {"$set": {"subscription_status": 'inactive',
                     "userType": "Free",
                     "subscription_id": '',
                     }},

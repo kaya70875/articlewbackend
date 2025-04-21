@@ -5,14 +5,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from app.utils.signature import verify_paddle_signature
 from app.routes.paddle.events import *
-
-class PaddlePrice(BaseModel):
-    price_id: str
-    name: str
-    description: str
-    amount: str
-    currency: str
-    product_id: str
+from app.models.paddle import *
 
 if not getenv("PADDLE_API_SECRET"):
     raise ValueError("PADDLE_API_SECRET is not set in the environment.")
@@ -44,18 +37,18 @@ async def get_prices():
         print(f"Error retrieving prices: {e}")
         raise HTTPException(status_code=500, detail=f"Error retrieving prices: {e}")
 
-@router.get("/paddle/subscriptions/{subscription_id}")
+@router.get("/paddle/subscriptions/{subscription_id}", response_model=PaddleSubscription)
 async def get_subscription(subscription_id: str):
     """
     Get the subscription details from Paddle.
     """
     try:
-        print(subscription_id)
         subscription = paddle.subscriptions.get(subscription_id)
 
         return {
             "subscription_id": subscription.id,
             "next_billed_at": subscription.next_billed_at,
+            "cancellation_effective_at": subscription.scheduled_change.effective_at,
             "update_url": subscription.management_urls.update_payment_method,
             "cancel_url" : subscription.management_urls.cancel
         }
