@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 metrics_collection = db['userMetrics']
 
 USER_LIMITS = {
-    "basic": {
+    "free": {
         "sentenceReq" : 30,
         "generateReq": 7,
         "grammarReq" : 7,
@@ -19,7 +19,7 @@ USER_LIMITS = {
         "fixSentenceReq": 5,
         "compareWordsReq": 5
     },
-    "medium": {
+    "basic": {
         "sentenceReq" : 100,
         "generateReq": 20,
         "grammarReq" : 20,
@@ -28,7 +28,7 @@ USER_LIMITS = {
         "compareWordsReq": 12
     },
     "premium": {
-        "sentenceReq" : 1000,
+        "sentenceReq" : 300,
         "generateReq": 50,
         "grammarReq" : 50,
         "paraphraseReq": 50,
@@ -83,7 +83,7 @@ def check_request_limit(user_id : str, request_type : str):
             updated_metrics = metrics
             
         #Check if user exceed the limit
-        limits = USER_LIMITS.get(user_tier, USER_LIMITS['basic'])
+        limits = USER_LIMITS.get(user_tier, USER_LIMITS['free'])
         if updated_metrics[request_type] >= limits[request_type]:
             logger.info('Request limit exceeded.')
             raise HTTPException(status_code=402, detail=f'Request limit exceed. {request_type}. Payment Required.')
