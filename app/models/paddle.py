@@ -4,7 +4,7 @@ from datetime import datetime
 class PaddleSubscription(BaseModel):
     subscription_id: str
     next_billed_at: datetime | None
-    cancellation_effective_at: datetime
+    cancellation_effective_at: datetime | None
     update_url: str
     cancel_url: str
 

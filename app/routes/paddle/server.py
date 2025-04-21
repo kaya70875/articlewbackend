@@ -48,7 +48,7 @@ async def get_subscription(subscription_id: str):
         return {
             "subscription_id": subscription.id,
             "next_billed_at": subscription.next_billed_at,
-            "cancellation_effective_at": subscription.scheduled_change.effective_at,
+            "cancellation_effective_at": subscription.scheduled_change.effective_at if subscription.scheduled_change else None,
             "update_url": subscription.management_urls.update_payment_method,
             "cancel_url" : subscription.management_urls.cancel
         }
@@ -77,15 +77,16 @@ async def webhook(req: Request):
         # Handle different event types
         if event_type == "subscription.created":
             # Handle subscription created event
-            await handleSubscriptionCreated(data)
+            handleSubscriptionCreated(data)
         
         elif event_type == "subscription.updated":
             # Handle subscription updated event
-            print('A subscription updated', data)
+            print(data)
+            handleSubscriptionUpdated(data)
         
         elif event_type == "subscription.cancelled":
             # Handle subscription cancelled event
-            await handleSubscriptionCanceled(data)
+            handleSubscriptionCanceled(data)
     
         else:
             print(f"Unhandled event type: {event_type}")
