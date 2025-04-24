@@ -12,34 +12,34 @@ metrics_collection = db['userMetrics']
 
 USER_LIMITS = {
     "free": {
-        "sentenceReq" : 30,
-        "generateReq": 7,
+        "sentenceReq" : 50,
+        "generateReq": 10,
         "grammarReq" : 7,
-        "paraphraseReq": 5,
-        "fixSentenceReq": 5,
-        "compareWordsReq": 5
-    },
-    "basic": {
-        "sentenceReq" : 100,
-        "generateReq": 20,
-        "grammarReq" : 20,
-        "paraphraseReq": 12,
-        "fixSentenceReq": 12,
-        "compareWordsReq": 12
+        "paraphraseReq": 7,
+        "fixSentenceReq": 7,
+        "compareWordsReq": 7
     },
     "premium": {
-        "sentenceReq" : 300,
-        "generateReq": 50,
-        "grammarReq" : 50,
-        "paraphraseReq": 50,
-        "fixSentenceReq": 50,
-        "compareWordsReq": 50
+        "sentenceReq" : -1,
+        "generateReq": 100,
+        "grammarReq" : 100,
+        "paraphraseReq": 100,
+        "fixSentenceReq": 100,
+        "compareWordsReq": 100
+    },
+    "premium_plus": {
+        "sentenceReq" : -1,
+        "generateReq": -1,
+        "grammarReq" : 500,
+        "paraphraseReq": -1,
+        "fixSentenceReq": -1,
+        "compareWordsReq": 500
     }
 }
 
 def get_user_tier(user_id : str) -> str:
     """
-    Retrieve user type (basic, medium, premium) from the users collection.
+    Retrieve user type (free, premium, premium_plus) from the users collection.
     """
     try:
         user = db['users'].find_one({'_id' : ObjectId(user_id)})
@@ -84,6 +84,11 @@ def check_request_limit(user_id : str, request_type : str):
             
         #Check if user exceed the limit
         limits = USER_LIMITS.get(user_tier, USER_LIMITS['free'])
+
+        #Check unlimited request types
+        if updated_metrics[request_type] < 0:
+            return logger.info('Unlimited request type handled.')
+
         if updated_metrics[request_type] >= limits[request_type]:
             logger.info('Request limit exceeded.')
             raise HTTPException(status_code=402, detail=f'Request limit exceed. {request_type}. Payment Required.')

@@ -15,3 +15,4 @@ class PaddlePrice(BaseModel):
     amount: str
     currency: str
     product_id: str
+    limits: dict | list

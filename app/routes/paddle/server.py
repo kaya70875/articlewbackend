@@ -20,19 +20,44 @@ async def get_prices():
     Get the prices from Paddle.
     """
     try:
-        prices = paddle.prices.list()
+        paddle_prices = paddle.prices.list()
 
-        return [
+        #Create a free tier for free users
+        free_tier = {
+            "name" : "Free",
+            "description" : "Basic plan for free users",
+            "price_id" : "",
+            "amount" : '0',
+            "currency": "USD",
+            "product_id" : "",
+            "limits": {
+                "search" : "50 / day",
+                "generate" : "10 / day",
+                "grammar" : "7 / day",
+                "paraphrase" : "7 / day",
+                "fix" : "7 / day",
+                "compare": "7 / day",
+            }
+        }
+
+        all_prices = [
             {
                 "name" : price.name,
                 "description" : price.description,
                 "price_id": price.id,
                 "amount": price.unit_price.amount,
                 "currency": price.unit_price.currency_code.value,
-                "product_id": price.product_id
+                "product_id": price.product_id,
+                "limits": price.custom_data.data if price.custom_data else {}
             }
-            for price in prices
+            for price in paddle_prices
+            
         ]
+
+        # Add the free tier to the list of prices
+        all_prices.insert(0, free_tier)
+
+        return all_prices
     except Exception as e:
         print(f"Error retrieving prices: {e}")
         raise HTTPException(status_code=500, detail=f"Error retrieving prices: {e}")
