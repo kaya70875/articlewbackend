@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 metrics_collection = db['userMetrics']
 
+UNLIMITED = 100000
+
 USER_LIMITS = {
     "free": {
         "sentenceReq" : 50,
@@ -20,7 +22,7 @@ USER_LIMITS = {
         "compareWordsReq": 7
     },
     "premium": {
-        "sentenceReq" : -1,
+        "sentenceReq" : UNLIMITED,
         "generateReq": 100,
         "grammarReq" : 100,
         "paraphraseReq": 100,
@@ -28,11 +30,11 @@ USER_LIMITS = {
         "compareWordsReq": 100
     },
     "premium_plus": {
-        "sentenceReq" : -1,
-        "generateReq": -1,
+        "sentenceReq" : UNLIMITED,
+        "generateReq": UNLIMITED,
         "grammarReq" : 500,
-        "paraphraseReq": -1,
-        "fixSentenceReq": -1,
+        "paraphraseReq": UNLIMITED,
+        "fixSentenceReq": UNLIMITED,
         "compareWordsReq": 500
     }
 }
