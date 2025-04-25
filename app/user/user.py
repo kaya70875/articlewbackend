@@ -87,10 +87,6 @@ def check_request_limit(user_id : str, request_type : str):
         #Check if user exceed the limit
         limits = USER_LIMITS.get(user_tier, USER_LIMITS['free'])
 
-        #Check unlimited request types
-        if updated_metrics[request_type] < 0:
-            return logger.info('Unlimited request type handled.')
-
         if updated_metrics[request_type] >= limits[request_type]:
             logger.info('Request limit exceeded.')
             raise HTTPException(status_code=402, detail=f'Request limit exceed. {request_type}. Payment Required.')
