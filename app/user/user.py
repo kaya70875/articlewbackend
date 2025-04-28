@@ -58,7 +58,7 @@ def check_request_limit(user_id : str, request_type : str):
     Checks request limits for a specific user based on current plan.
     """
 
-    user_tier = get_user_tier(user_id).lower()
+    user_tier = get_user_tier(user_id).lower().replace(' ', '_')
     now = datetime.now()
 
     try:
