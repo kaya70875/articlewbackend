@@ -2,6 +2,7 @@ from fastapi import APIRouter , HTTPException, Path
 from typing import Literal
 from app.models.aiResponse import *
 from word.deepseek import *
+from app.responses.validate import validate_json_response
 from dotenv import load_dotenv
 import os
 from urllib.parse import unquote
@@ -30,7 +31,7 @@ async def generate_response(user_id : Annotated[str, Depends(get_user_id)], word
         
     if isinstance(results, str):
         parsed_results = json.loads(results.strip("```json").strip("```").strip())
-        return parsed_results
+        return validate_json_response(AIFeedbackResponse, parsed_results)
 
     else:
         logger.warning('Response from AI is not a string or it is empty')
@@ -47,6 +48,7 @@ async def analyze_sentence(
 
     sentence = unquote(sentence) # filter out special characters from url like ? , . etc
     results = await analyze_sentence_with_word(sentence, word, api_key)
+    
     return {"response": results}
 
 @router.get("/grammar/{sentence}", response_model=FixGrammarResponse, response_description="Fix all grammar errors in a sentence. Additionally fixing spelling errors or typos.")
@@ -59,8 +61,6 @@ async def fix_grammar(user_id : Annotated[str, Depends(get_user_id)], sentence :
     results = await fix_grammar_errors(sentence, api_key)
     return {"original_sentence": results[0], "corrected_sentence": results[1], "raw_sentence": results[2]}
     
-
-
 @router.get("/paraphrase/{sentence}/{context}" , response_model=ParaphraseResponse, response_description="Generate a paraphrase of a sentence.")
 async def generate_paraphrase(
     user_id : Annotated[str, Depends(get_user_id)],
@@ -90,7 +90,7 @@ async def compare(
     if results:
         try:
             parsed_results = json.loads(results.strip("```json").strip("```").strip())
-            return parsed_results # ✅ Return structured JSON directly
+            return validate_json_response(CompareResponse, parsed_results)
         except json.JSONDecodeError:
             logger.error('Invalid JSON response from AI')
             raise HTTPException(status_code=400, detail='Invalid JSON response from API')
