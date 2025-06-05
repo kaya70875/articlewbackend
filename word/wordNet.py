@@ -1,4 +1,3 @@
-import nltk
 from nltk.corpus import wordnet
 from nltk.corpus import brown
 from collections import Counter
