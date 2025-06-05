@@ -6,6 +6,7 @@ import logging
 from app.user.user import check_request_limit
 from typing import Annotated
 from app.user.extract_jwt_token import get_user_id
+import asyncio
 
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ async def get_sentences(
     """
 
     #Check for request limit for specific user and route
-    check_request_limit(user_id, 'sentenceReq')
+    await asyncio.to_thread(check_request_limit, user_id, 'sentenceReq')
 
     try:
         # Base filter to search for the word in sentences
@@ -82,7 +83,7 @@ async def get_sentences(
             'max_length': max_length,
             'sort_by': sort_by,
             'order': order,
-            'total_results': sentences_collection.count_documents(filter_query),
+            #'total_results': sentences_collection.count_documents(filter_query), This is expensive, we could calculate this later with celery, arq or a better function.
             'sentences': filtered_results
         }
     except CursorNotFound as cursor_err:
