@@ -11,7 +11,9 @@ import logging
 from typing import Annotated
 from fastapi import Depends
 from app.user.extract_jwt_token import get_user_id
-from app.user.user import check_request_limit
+from app.lib.request import track_requests
+from app.lib.rd import r
+import time
 
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -23,14 +25,17 @@ router = APIRouter()
 
 @router.get("/generate/{word}", response_model=AIFeedbackResponse, response_description="Check if word is valid and generate a response about how this word is used in a sentence.")
 async def generate_response(user_id : Annotated[str, Depends(get_user_id)], word: str = Path(description="The word to generate a response about", min_length=1, max_length=30)):
-
+    start = time.perf_counter()
     #Check for request limit.
-    check_request_limit(user_id, 'generateReq')
+
+    track_requests(user_id, 'generateReq')
 
     results = await analyze_word(word, api_key)
         
     if isinstance(results, str):
         parsed_results = json.loads(results.strip("```json").strip("```").strip())
+        end = time.perf_counter()
+        print(f'Took {end - start} seconds to generate AI response.')
         return validate_json_response(AIFeedbackResponse, parsed_results)
 
     else:
@@ -44,7 +49,7 @@ async def analyze_sentence(
     word: str = Path(description="The word to analyze", min_length=1, max_length=30),):
 
     #Check for request limit.
-    check_request_limit(user_id, 'grammarReq')
+    track_requests(user_id, 'grammarReq')
 
     sentence = unquote(sentence) # filter out special characters from url like ? , . etc
     results = await analyze_sentence_with_word(sentence, word, api_key)
@@ -55,7 +60,7 @@ async def analyze_sentence(
 async def fix_grammar(user_id : Annotated[str, Depends(get_user_id)], sentence : str = Path(description="The sentence to fix", min_length=1, max_length=500)):
 
     #Check for request limit.
-    check_request_limit(user_id, 'fixSentenceReq')
+    track_requests(user_id, 'fixSentenceReq')
 
     sentence = unquote(sentence) # filter out special characters from url like ? , . etc
     results = await fix_grammar_errors(sentence, api_key)
@@ -69,7 +74,7 @@ async def generate_paraphrase(
     ):
     
     #Check for request limit.
-    check_request_limit(user_id, 'paraphraseReq')
+    track_requests(user_id, 'paraphraseReq')
 
     sentence = unquote(sentence) # filter out special characters from url like ? , . etc
     results = await paraphrase(sentence, api_key, context=context)
@@ -83,7 +88,7 @@ async def compare(
     ):
 
     #Check for request limit.
-    check_request_limit(user_id, 'compareWordsReq')
+    track_requests(user_id, 'compareWordsReq')
 
     results = await compare_words(word1, word2, api_key)
 

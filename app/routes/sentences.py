@@ -2,10 +2,10 @@ from fastapi import APIRouter, HTTPException, Query, Path, Depends
 from app.models.database import sentences_collection
 from app.utils.helpers import extract_sentence
 from pymongo.errors import CursorNotFound
-import logging
-from app.user.user import check_request_limit
 from typing import Annotated
 from app.user.extract_jwt_token import get_user_id
+from app.lib.request import track_requests
+import logging
 import asyncio
 
 logging.basicConfig(level=logging.ERROR)
@@ -30,7 +30,7 @@ async def get_sentences(
     """
 
     #Check for request limit for specific user and route
-    await asyncio.to_thread(check_request_limit, user_id, 'sentenceReq')
+    await asyncio.to_thread(track_requests, user_id, 'sentenceReq')
 
     try:
         # Base filter to search for the word in sentences
