@@ -12,8 +12,6 @@ from typing import Annotated
 from fastapi import Depends
 from app.user.extract_jwt_token import get_user_id
 from app.lib.request import track_requests
-from app.lib.rd import r
-import time
 
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -25,22 +23,16 @@ router = APIRouter()
 
 @router.get("/generate/{word}", response_model=AIFeedbackResponse, response_description="Check if word is valid and generate a response about how this word is used in a sentence.")
 async def generate_response(user_id : Annotated[str, Depends(get_user_id)], word: str = Path(description="The word to generate a response about", min_length=1, max_length=30)):
-    start = time.perf_counter()
     #Check for request limit.
-
     track_requests(user_id, 'generateReq')
-
     results = await analyze_word(word, api_key)
-        
-    if isinstance(results, str):
-        parsed_results = json.loads(results.strip("```json").strip("```").strip())
-        end = time.perf_counter()
-        print(f'Took {end - start} seconds to generate AI response.')
-        return validate_json_response(AIFeedbackResponse, parsed_results)
 
-    else:
+    if not results: 
         logger.warning('Response from AI is not a string or it is empty')
         raise HTTPException(status_code=404, detail="No results found.")
+    
+    return validate_json_response(AIFeedbackResponse, results)
+    
 
 @router.get("/analysis/{sentence}/{word}", response_model=AIBasicResponse, response_description="Analyze a sentence and generate a response about its grammar structure.")
 async def analyze_sentence(
@@ -92,14 +84,13 @@ async def compare(
 
     results = await compare_words(word1, word2, api_key)
 
-    if results:
-        try:
-            parsed_results = json.loads(results.strip("```json").strip("```").strip())
-            return validate_json_response(CompareResponse, parsed_results)
-        except json.JSONDecodeError:
-            logger.error('Invalid JSON response from AI')
-            raise HTTPException(status_code=400, detail='Invalid JSON response from API')
-        
-    else:
+    if not results:
         logger.warning('Response from AI is not a string or it is empty')
         raise HTTPException(status_code=404, detail='No results found')
+
+    try:
+        return validate_json_response(CompareResponse, results)
+    except json.JSONDecodeError:
+        logger.error('Invalid JSON response from AI')
+        raise HTTPException(status_code=400, detail='Invalid JSON response from API')
+        

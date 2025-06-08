@@ -4,6 +4,7 @@ from difflib import SequenceMatcher
 from typing import Optional
 from fastapi import HTTPException
 import logging
+import time
 import json
 
 logging.basicConfig(level=logging.ERROR)
@@ -96,7 +97,7 @@ def extract_paraphrase_sentences(results : str, num_sentences : int = 5) -> list
     
     return extracted_list
 
-def get_chat_completion(api_key: str, content: dict, temperature: int = 1.3):
+def get_chat_completion(api_key: str, content: dict, temperature: int = 1.3, response_format: str = 'text'):
     """
     Get a chat completion response from the DeepSeek AI model.
 
@@ -107,10 +108,12 @@ def get_chat_completion(api_key: str, content: dict, temperature: int = 1.3):
     Returns:
         str: The content of the AI's response to the provided messages.
     """
+
     
     from openai import OpenAI
 
     try:
+        start = time.perf_counter()
         client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
 
         response = client.chat.completions.create(
@@ -123,13 +126,17 @@ def get_chat_completion(api_key: str, content: dict, temperature: int = 1.3):
                 content
             ],
             temperature=temperature,
+            response_format={'type' : response_format},
             stream=False
         )
 
         if not response:
             raise HTTPException(status_code=500, detail='Response from AI is not valid.')
+        end = time.perf_counter()
+        print(f'Took {end - start} seconds to return AI message.')
 
-        return response.choices[0].message.content
+        ai_resp = response.choices[0].message.content
+        return json.loads(ai_resp) if response_format == 'json_object' else ai_resp
     except Exception as e:
         logger.error(f'Error while getting chat completion {e}')
         raise HTTPException(status_code=500, detail=f'Error while getting chat completion {e}')

@@ -17,7 +17,7 @@ async def analyze_word(word: str, api_key: str) -> str:
             "content": f"Analyze '{word}' and give an example of its usage. Return a json like this: {{\"check\": \"'prevent' is a correct and usable word in written English.\",\"analysis\" : \"It can be used to describe a situation in which something bad is avoided from happening. For example: 'Taking precautions helped us prevent the spread of the virus.'\"}}"
         }
 
-    response_text = await asyncio.to_thread(get_chat_completion, api_key, content)
+    response_text = await asyncio.to_thread(get_chat_completion, api_key, content, 1.3, 'json_object')
     return response_text
 
 async def analyze_sentence_with_word(sentence : str, word : str, api_key: str) -> str:
@@ -103,5 +103,5 @@ async def compare_words(word_1 : str, word_2 : str, api_key : str) -> str:
             "content": f"Compare '{word_1}' and '{word_2}'. Explain their similarities and differences. Format the response as valid JSON with the following structure: {{ \"similarities\": \"...\", \"differences\": \"...\", \"examples_word1\": [\"...\"], \"examples_word2\": [\"...\"] }}."
         }
 
-    response_text = await asyncio.to_thread(get_chat_completion, api_key, content)
+    response_text = await asyncio.to_thread(get_chat_completion, api_key, content, 1.3, 'json_object')
     return response_text
