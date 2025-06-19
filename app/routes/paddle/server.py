@@ -2,7 +2,6 @@ from paddle_billing import Client, Environment, Options
 from typing import List
 from os import getenv
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel
 from app.utils.signature import verify_paddle_signature
 from app.routes.paddle.events import *
 from app.models.paddle import *
