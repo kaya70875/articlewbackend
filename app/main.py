@@ -35,6 +35,10 @@ async def validate_env():
 
 nltk.data.path.append(os.getenv("NLTK_DATA", "./nltk_data"))
 
+@app.get("/")
+async def root():
+    return 'Welcome to articlew backend app!'
+
 # Run the app
 if __name__ == "__main__":
     import uvicorn
