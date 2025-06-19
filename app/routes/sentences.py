@@ -28,7 +28,6 @@ async def get_sentences(
     """
     Get sentences containing the word, optionally filtered by categories, length, and sorted.
     """
-
     #Check for request limit for specific user and route
     await asyncio.to_thread(track_requests, user_id, 'sentenceReq')
 
@@ -60,8 +59,7 @@ async def get_sentences(
         skip = (page - 1) * page_size
 
         # Query the database with the filter
-        cursor = sentences_collection.find(filter_query, {'_id': 0}).skip(skip).limit(page_size)
-
+        cursor = sentences_collection.find(filter_query, {'_id': 0, 'text': 1, 'category': 1}).skip(skip).limit(page_size)
         # Apply sorting if specified
         if sort_by:
             sort_order = 1 if order == "asc" else -1
