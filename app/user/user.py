@@ -55,7 +55,7 @@ def get_user_tier(user_id : str) -> str:
 
 #TODO Consider handling all actions in one atomic way instead of if else block.
 
-def check_request_limit(user_id : str, request_type : str, increment: int = 1):
+def check_request_limit(user_id : str, request_type : str, increment: int = 1) -> bool:
 
     """
     Checks request limits for a specific user based on current plan.
@@ -66,7 +66,6 @@ def check_request_limit(user_id : str, request_type : str, increment: int = 1):
 
     try:
         metrics = metrics_collection.find_one({'_id' : ObjectId(user_id)})
-        #print('metrics', metrics)
         
         if not metrics or metrics.get('reset_date', now) <= now:
             #If no record, create a new with reset time
@@ -91,6 +90,7 @@ def check_request_limit(user_id : str, request_type : str, increment: int = 1):
         limits = USER_LIMITS.get(user_tier, USER_LIMITS['free'])
 
         if updated_metrics[request_type] >= limits[request_type]:
+            is_payment_required = True
             logger.info('Request limit exceeded.')
             raise HTTPException(status_code=402, detail=f'Request limit exceed. {request_type}. Payment Required.')
 
@@ -99,6 +99,8 @@ def check_request_limit(user_id : str, request_type : str, increment: int = 1):
         
         end = time.perf_counter()
         print(f'Took {end - start} to check request limit.')
+
+        return is_payment_required
 
     except WriteError as write_err:
         logger.error(f'Error while writing the database {write_err}')
