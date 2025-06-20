@@ -64,6 +64,8 @@ def check_request_limit(user_id : str, request_type : str, increment: int = 1) -
     user_tier = get_user_tier(user_id).lower().replace(' ', '_')
     now = datetime.now()
 
+    is_payment_required = False
+
     try:
         metrics = metrics_collection.find_one({'_id' : ObjectId(user_id)})
         
