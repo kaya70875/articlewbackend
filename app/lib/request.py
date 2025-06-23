@@ -10,7 +10,7 @@ def track_requests(user_id: str, request_type: str, request_count: int = 5):
     Track requests to insert after number of requests for optimizing database operations.
     """
     key = f"user:{user_id}:requests"
-    current_count = int(r.hget(key, request_type))
+    current_count = int(r.hget(key, request_type)) if r.hget(key, request_type) else 0
 
     if current_count % request_count == 0:
         is_payment_required = check_request_limit(user_id, request_type, request_count)
