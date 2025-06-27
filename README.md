@@ -1,29 +1,50 @@
 # 🧠 articlewbackend
 
-The **backend service** for the [Articlew](https://github.com/kaya70875/articlew) platform — a powerful educational tool that generates intelligent, contextualized English sentences from real-world articles.
+The **backend service** for the [Articlew](https://github.com/kaya70875/articlew) platform — an educational app that generates intelligent, contextualized English sentences from real-world articles and content.
 
-This backend is built with **FastAPI** and is responsible for handling sentence generation logic, managing crawl jobs and exposing APIs for the frontend.
+This backend is built with **FastAPI** and powers the sentence generation engine and APIs consumed by the frontend.
 
 ---
 
-## 🎯 Project Purpose
+## 🎯 Overview
 
-The goal of this backend is to serve as the **API and logic layer** of the Articlew system. It connects the frontend with crawled sentence data, generates content based on user input.
+This service acts as the brain of the Articlew platform, handling:
 
-It works in conjunction with the [`articlewscraper`](https://github.com/kaya70875/articlewscraper) microservice that crawls articles and populates the database with sentence data.
+- Sentence generation based on word input and article data
+- Providing REST APIs for frontend communication
+- AI tools like fix sentence, compare words and paraphrase.
+- Fully integrated Paddle subscription system.
+
+It works together with:
+- [`articlewscraper`](https://github.com/kaya70875/articlewscraper): a microservice that crawls and saves articles to the database.
+- [`articlew`](https://github.com/kaya70875/articlew): the frontend application that interacts with this backend.
 
 ---
 
 ## ⚙️ Features
 
-- ✍️ **Sentence Generation**  
-  Creates sample sentences based on user input (a word or phrase), filtered by topic, sentence length, and metadata.
+- ✍️ **Word-based Sentence Generation**  
+  Generates natural example sentences for a user-provided word across different article topics.
 
-- 🧩 **API Endpoints**  
-  RESTful endpoints for user job status, sentence results, queue tracking, and more.
+- 🧠 **Smart Filtering**  
+  Filters sentences by topic, word inclusion, length, and article source.
 
-- 👤 **User Authentication**  
-  Supports OAuth-based authentication (e.g., Google) and routes protected via FastAPI dependencies.
+- 🔐 **Authentication**  
+  OAuth (e.g., Google) token-based authentication using FastAPI dependencies.
 
-- 🔄 **Integration-Ready**  
-  Designed to work seamlessly with the frontend (`articlew`) and the scraping microservice (`articlewscraper`).
+- 🧪 **API-First Design**  
+  Fully RESTful and integrates easily with web or mobile frontends.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer             | Technology         |
+|------------------|--------------------|
+| Language         | Python 3.11         |
+| Framework        | FastAPI            |
+| Database         | MongoDB Atlas      |
+| Caching          | Redis              |
+| Auth             | OAuth (Google) + JWT |
+| Hosting          | Railway (Backend)  |
+| Related Tools    | Pydantic, Uvicorn |
