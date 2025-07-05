@@ -1,7 +1,7 @@
 from fastapi import APIRouter , HTTPException, Path
 from typing import Literal
 from app.models.aiResponse import *
-from word.deepseek import *
+from word.word_assistant import WordAssistant
 from app.responses.validate import validate_json_response
 from dotenv import load_dotenv
 import os
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 api_key = os.getenv('DEEPSEEK_API_KEY')
+word_assistant = WordAssistant(api_key)
 
 router = APIRouter()
 
@@ -25,7 +26,7 @@ router = APIRouter()
 async def generate_response(user_id : Annotated[str, Depends(get_user_id)], word: str = Path(description="The word to generate a response about", min_length=1, max_length=30)):
     #Check for request limit.
     track_requests(user_id, 'generateReq')
-    results = await analyze_word(word, api_key)
+    results = await word_assistant.analyze_word(word)
 
     if not results: 
         logger.warning('Response from AI is not a string or it is empty')
@@ -44,7 +45,7 @@ async def analyze_sentence(
     track_requests(user_id, 'grammarReq')
 
     sentence = unquote(sentence) # filter out special characters from url like ? , . etc
-    results = await analyze_sentence_with_word(sentence, word, api_key)
+    results = await word_assistant.analyze_sentence_with_word(sentence, word)
     
     return {"response": results}
 
@@ -55,7 +56,7 @@ async def fix_grammar(user_id : Annotated[str, Depends(get_user_id)], sentence :
     track_requests(user_id, 'fixSentenceReq')
 
     sentence = unquote(sentence) # filter out special characters from url like ? , . etc
-    results = await fix_grammar_errors(sentence, api_key)
+    results = await word_assistant.fix_grammar_errors(sentence)
     return {"original_sentence": results[0], "corrected_sentence": results[1], "raw_sentence": results[2]}
     
 @router.get("/paraphrase/{sentence}/{context}" , response_model=ParaphraseResponse, response_description="Generate a paraphrase of a sentence.")
@@ -69,7 +70,7 @@ async def generate_paraphrase(
     track_requests(user_id, 'paraphraseReq')
 
     sentence = unquote(sentence) # filter out special characters from url like ? , . etc
-    results = await paraphrase(sentence, api_key, context=context)
+    results = await word_assistant.paraphrase(sentence, context=context)
     return {"paraphrase": results}
 
 @router.get("/compare/{word1}/{word2}", response_model=CompareResponse, response_description="Compare two words and generate a response about their similarities and differences.")
@@ -82,7 +83,7 @@ async def compare(
     #Check for request limit.
     track_requests(user_id, 'compareWordsReq')
 
-    results = await compare_words(word1, word2, api_key)
+    results = await word_assistant.compare_words(word1, word2)
 
     if not results:
         logger.warning('Response from AI is not a string or it is empty')
