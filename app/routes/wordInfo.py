@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Path
 from app.models.word_info import *
-from word.wordNet import get_word_info_extended
+from word.wordkit import Wordkit
 import asyncio
 import logging
 from word.spacyWord import calculate_similarity_score
@@ -14,7 +14,8 @@ router = APIRouter()
 async def get_word_info(word: str = Path(description="The word to get info about", min_length=1, max_length=30, strip_whitespace=True)):
     try:
         # Call the function to get word information
-        word_info = await asyncio.to_thread(get_word_info_extended, word)
+        wordkit = Wordkit(word)
+        word_info = await asyncio.to_thread(wordkit.get_word_info_extended)
         if word_info.get('pos') is None:
             logger.error(f"Word not found! : {word}")
             raise HTTPException(status_code=404, detail="Word not found.")
