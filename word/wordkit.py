@@ -24,7 +24,7 @@ class Wordkit:
             "adverb": [],
             "verb": [],
             "noun": [],
-            'pos' : self.most_common_pos(self.word)
+            'pos' : self.most_common_pos()
         }
         
         # Loop through each synset to check its part of speech
