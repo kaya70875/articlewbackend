@@ -1,4 +1,5 @@
-from app.utils.helpers import *
+from app.utils.request_helpers import get_chat_completion
+from app.utils.text_helpers import *
 import asyncio
 
 class WordAssistant:

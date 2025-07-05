@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 import pytest
-from utils.helpers import extract_paraphrase_sentences
+from app.utils.text_helpers import extract_paraphrase_sentences
 
 def test_extract_paraphrase_sentences():
     # Test case 1: Paraphrase with a default results

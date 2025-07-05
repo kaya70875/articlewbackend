@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, Path, Depends
 from app.models.database import sentences_collection
-from app.utils.helpers import extract_sentence
+from app.utils.text_helpers import extract_sentence
 from pymongo.errors import CursorNotFound
 from typing import Annotated
 from app.user.extract_jwt_token import get_user_id

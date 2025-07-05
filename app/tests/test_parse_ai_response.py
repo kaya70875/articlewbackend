@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 import pytest
-from utils.helpers import parse_AI_response
+from app.utils.text_helpers import parse_AI_response
 
 def test_no_message_content():
     messages = [{'content': ''}]

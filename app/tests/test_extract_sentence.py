@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from utils.helpers import extract_sentence
+from app.utils.text_helpers import extract_sentence
 
 def test_extract_sentence():
     # Test case 1: Test default behavior
