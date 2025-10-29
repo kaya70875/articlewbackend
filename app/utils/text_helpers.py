@@ -5,7 +5,7 @@ import logging
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
-def extract_sentence(results : list, word: str) -> list:
+def extract_sentences_from_raw_text(results : list, word: str) -> list[str]:
 
     """
     Extract the sentence that contains the word. This function extract sentences from a text or sentence using a regular expression.

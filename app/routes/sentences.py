@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, Path, Depends
 from app.models.database import sentences_collection
-from app.utils.text_helpers import extract_sentence
+from app.utils.text_helpers import extract_sentences_from_raw_text
 from pymongo.errors import CursorNotFound
 from pymongo.cursor import Cursor
 from typing import Annotated
@@ -77,7 +77,7 @@ def get_cursors(filter_query: dict, skip: int, page_size: int) -> list[Cursor]:
 
 
 def get_filtered_sentences(results: list[Cursor], word: str) -> list[str]:
-    filtered_results = extract_sentence(results, word)
+    filtered_results = extract_sentences_from_raw_text(results, word)
 
     # Handle no results
     if not results:
