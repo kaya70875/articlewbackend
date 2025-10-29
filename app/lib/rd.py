@@ -6,7 +6,7 @@ password = os.getenv('REDIS_PASSWORD')
 
 r = redis.Redis(
     host=host,
-    port=15382,
+    port=10918,
     decode_responses=True,
     username="default",
     password=password,
