@@ -5,7 +5,7 @@ from pymongo.errors import CursorNotFound
 from pymongo.cursor import Cursor
 from typing import Annotated
 from app.user.extract_jwt_token import get_user_id
-from app.lib.request import track_requests
+from app.user.user import check_request_limit
 import logging
 import asyncio
 
@@ -28,7 +28,7 @@ async def sentences(
     Get sentences containing the word, optionally filtered by categories, length, and sorted.
     """
     #Check for request limit for specific user and route
-    await asyncio.to_thread(track_requests, user_id, 'sentenceReq')
+    await asyncio.to_thread(check_request_limit, user_id, 'sentenceReq')
 
     try:
         # Base filter to search for the word in sentences

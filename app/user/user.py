@@ -4,10 +4,8 @@ from pymongo.errors import WriteError
 from datetime import datetime, timedelta
 from fastapi import HTTPException
 from pymongo import ReturnDocument
-from app.lib.rd import r
 import logging
 import time
-import json
 
 logger = logging.getLogger(__name__)
 
