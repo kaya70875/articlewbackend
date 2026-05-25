@@ -40,26 +40,16 @@ USER_LIMITS = {
     }
 }
 
-def get_user_tier(user_id : str) -> str:
-    """
-    Retrieve user type (free, premium, premium_plus) from the users collection.
-    """
-    try:
-        user = db['users'].find_one({'_id' : ObjectId(user_id)}, {"userType" : 1 , "_id": 0})
-        return user.get('userType')
-    except AttributeError as attr_err:
-        logger.error(f'Error while accessing attr ${attr_err}')
-        raise HTTPException(status_code=400, detail=f'Error while accessing attr ${attr_err}')
-
 #TODO Consider handling all actions in one atomic way instead of if else block.
 
-def check_request_limit(user_id : str, request_type : str, increment: int = 1) -> bool:
+def check_request_limit(user_info : dict, request_type : str, increment: int = 1) -> bool:
 
     """
     Checks request limits for a specific user based on current plan.
     """
     start = time.perf_counter()
-    user_tier = get_user_tier(user_id).lower().replace(' ', '_')
+    user_tier = user_info.get('user_tier')
+    user_id = user_info.get('user_id')
     now = datetime.now()
 
     is_payment_required = False

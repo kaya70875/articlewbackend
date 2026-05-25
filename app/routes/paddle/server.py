@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Request, Depends
 from app.utils.signature import verify_paddle_signature
 from app.routes.paddle.events import *
 from app.models.paddle import *
-from app.user.extract_jwt_token import get_user_id
+from app.user.extract_jwt_token import get_user_info
 from app.models.database import db
 
 if not getenv("PADDLE_API_SECRET"):
@@ -84,14 +84,14 @@ async def get_subscription(subscription_id: str):
         raise HTTPException(status_code=500, detail=f"Error retrieving subscription: {e}")
 
 @router.get("/paddle/subid")
-async def get_subscription_id(user_id: Annotated[str, Depends(get_user_id)]):
-    if not user_id:
+async def get_subscription_id(user_info: Annotated[dict, Depends(get_user_info)]):
+    if not user_info:
         raise HTTPException(status_code=401, detail='Unauthorized')
     
-    subId = db['users'].find_one({"_id": ObjectId(user_id)}, {"subscription_id" : 1, "_id": 0})
+    subId = db['users'].find_one({"_id": ObjectId(user_info.get("user_id"))}, {"subscription_id" : 1, "_id": 0})
 
     if not subId:
-        raise HTTPException(status_code=404, detail=f'Subscription id cannot found for user: {user_id}')
+        raise HTTPException(status_code=404, detail=f'Subscription id cannot found for user: {user_info.get("user_id")}')
 
     return subId.get("subscription_id")
 

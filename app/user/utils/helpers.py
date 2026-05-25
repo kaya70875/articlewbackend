@@ -11,12 +11,13 @@ logger = logging.getLogger(__name__)
 SECRET_KEY = os.getenv('JWT_SECRET')
 ALGORITHM = 'HS256'
 
-async def extract_id_from_jwt(token : str):
+async def extract_id_from_jwt(token : str) -> dict:
     try:        
         # Decode the JWT token
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         
         user_id = payload.get('sub')
+        user_tier = payload.get('userType')
         if user_id is None:
             raise HTTPException(
                 status_code=401,
@@ -24,7 +25,10 @@ async def extract_id_from_jwt(token : str):
                 headers={"WWW-Authenticate": "Bearer"},
             )
                 
-        return user_id
+        return {
+            "user_id": user_id,
+            "user_tier": user_tier
+        }
     except jwt.PyJWTError as py_err:
         logger.error(f'Invalid authentication credentials. Details: ${py_err}')
         raise HTTPException(
@@ -33,7 +37,7 @@ async def extract_id_from_jwt(token : str):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-async def extract_id_from_email(token: str):
+async def extract_id_from_email(token: str) -> dict:
     try:
         async with httpx.AsyncClient() as client:
             res = await client.get(
@@ -55,8 +59,12 @@ async def extract_id_from_email(token: str):
         if not currentUser:
             raise HTTPException(status_code=404, detail="User not found in DB")
         user_id = currentUser.get('_id')
+        user_tier = currentUser.get('userType')
 
-        return user_id
+        return {
+            "user_id": str(user_id),
+            "user_tier": user_tier
+        }
     except httpx.HTTPStatusError as http_err:
         logger.error(f'HTTP error: {http_err}')
         raise HTTPException(status_code=http_err.response.status_code, detail=str(http_err))
