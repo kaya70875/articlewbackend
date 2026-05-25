@@ -4,10 +4,11 @@ from app.utils.text_helpers import extract_sentences_from_raw_text
 from pymongo.errors import CursorNotFound
 from pymongo.cursor import Cursor
 from typing import Annotated
-from app.user.extract_jwt_token import get_user_id
+from app.user.extract_jwt_token import get_user_info
 from app.user.user import check_request_limit
 import logging
 import asyncio
+import time
 
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ router = APIRouter()
 
 @router.get("/sentences/{word}")
 async def sentences(
-    user_id : Annotated[str, Depends(get_user_id)],
+    user_info : Annotated[dict, Depends(get_user_info)],
     word: str = Path(description="The word to search for in sentences", min_length=1, max_length=200),
     categories: str = Query(None, description="Comma-separated list of categories"),
     min_length: int = Query(None, description="Minimum sentence length"),
@@ -28,16 +29,11 @@ async def sentences(
     Get sentences containing the word, optionally filtered by categories, length, and sorted.
     """
     #Check for request limit for specific user and route
-    await asyncio.to_thread(check_request_limit, user_id, 'sentenceReq')
+    start = time.perf_counter()
+    await asyncio.to_thread(check_request_limit, user_info, 'sentenceReq')
 
     try:
-        # Base filter to search for the word in sentences
-        filter_query = {
-            'text': {
-                '$regex': rf'(?<!\w)(?:[A-Z][^.!?]*?\b{word}\b[^.!?]*[.!?])',
-                '$options': 'i'
-            }
-        }
+        filter_query = {"$text": {"$search": f"\"{word}\""}}
 
         # Add categories to the filter if provided
         if categories:
@@ -57,9 +53,10 @@ async def sentences(
 
         skip = (page - 1) * page_size
 
-        results = get_cursors(filter_query, skip, page_size)
+        results = await asyncio.to_thread(get_cursors, filter_query, skip, page_size)
         filtered_results = get_filtered_sentences(results, word)
-
+        end = time.perf_counter()
+        print(f"Request processed in {end - start:.2f} seconds")
         return {
             'word': word,
             'categories': categories,

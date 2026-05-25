@@ -1,11 +1,9 @@
 from app.models.database import db
 from bson import ObjectId
 from pymongo.errors import WriteError
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException
-from pymongo import ReturnDocument
 import logging
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -40,55 +38,72 @@ USER_LIMITS = {
     }
 }
 
-#TODO Consider handling all actions in one atomic way instead of if else block.
-
 def check_request_limit(user_info : dict, request_type : str, increment: int = 1) -> bool:
 
     """
     Checks request limits for a specific user based on current plan.
     """
-    start = time.perf_counter()
     user_tier = user_info.get('user_tier')
     user_id = user_info.get('user_id')
     uid = ObjectId(user_id)
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
 
     try:
-        metrics = metrics_collection.find_one({'_id' : uid})
-        
-        if not metrics or metrics.get('reset_date', now) <= now:
-            #If no record, create a new with reset time
-            updated_metrics = metrics_collection.find_one_and_update(
-                {"_id" : uid},
-                {"$set" : {
-                    'sentenceReq' : 0,
-                    'generateReq' : 0,
-                    'grammarReq' : 0,
-                    'paraphraseReq' : 0,
-                    'fixSentenceReq' : 0,
-                    'compareWordsReq' : 0,
-                    'reset_date' : now + timedelta(days=1) # Reset request limits after one day.
-                }},
-                upsert=True,
-                return_document=ReturnDocument.AFTER
-                )
-        else : 
-            updated_metrics = metrics
-            
-        #Check if user exceed the limit
-        limits = USER_LIMITS.get(user_tier, USER_LIMITS['free'])
+        limits = USER_LIMITS.get(user_tier, USER_LIMITS["free"])
+        limit = limits[request_type]
 
-        if updated_metrics[request_type] >= limits[request_type]:
-            logger.info('Request limit exceeded.')
-            raise HTTPException(status_code=402, detail=f'Request limit exceed. {request_type}. Payment Required.')
+        now = datetime.now(timezone.utc)
+        reset_date = now + timedelta(days=1)
 
-        #Increase request count if user has request limit
-        metrics_collection.update_one({'_id' : uid }, {"$inc" : {request_type : increment}})
-        
-        end = time.perf_counter()
-        print(f'Took {end - start} to check request limit.')
+        metrics_collection.update_one(
+            {"_id": uid},
+            {
+                "$setOnInsert": {
+                    "sentenceReq": 0,
+                    "generateReq": 0,
+                    "grammarReq": 0,
+                    "paraphraseReq": 0,
+                    "fixSentenceReq": 0,
+                    "compareWordsReq": 0,
+                    "reset_date": reset_date
+                }
+            },
+            upsert=True
+        )
 
-        return False
+        metrics_collection.update_one(
+            {
+                "_id": uid,
+                "reset_date": {"$lte": now}
+            },
+            {
+                "$set": {
+                    "sentenceReq": 0,
+                    "generateReq": 0,
+                    "grammarReq": 0,
+                    "paraphraseReq": 0,
+                    "fixSentenceReq": 0,
+                    "compareWordsReq": 0,
+                    "reset_date": reset_date
+                }
+            }
+        )
+
+        result = metrics_collection.update_one(
+            {
+                "_id": uid,
+                f"{request_type}": {"$lt": limit}
+            },
+            {
+                "$inc": {request_type: increment}
+            }
+        )
+
+        if result.modified_count == 0:
+            raise HTTPException(
+                status_code=402,
+                detail=f"Request limit exceeded for {request_type}"
+            )
 
     except WriteError as write_err:
         logger.error(f'Error while writing the database {write_err}')
