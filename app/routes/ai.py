@@ -10,7 +10,7 @@ import json
 import logging
 from typing import Annotated
 from fastapi import Depends
-from app.user.extract_jwt_token import get_user_id
+from app.user.extract_jwt_token import get_user_info
 from app.user.user import check_request_limit
 
 logging.basicConfig(level=logging.ERROR)
@@ -23,9 +23,9 @@ word_assistant = WordAssistant(api_key)
 router = APIRouter()
 
 @router.get("/generate/{word}", response_model=AIFeedbackResponse, response_description="Check if word is valid and generate a response about how this word is used in a sentence.")
-async def generate_response(user_id : Annotated[str, Depends(get_user_id)], word: str = Path(description="The word to generate a response about", min_length=1, max_length=30)):
+async def generate_response(user_info : Annotated[dict, Depends(get_user_info)], word: str = Path(description="The word to generate a response about", min_length=1, max_length=30)):
     #Check for request limit.
-    check_request_limit(user_id, 'generateReq')
+    check_request_limit(user_info, 'generateReq')
     results = await word_assistant.analyze_word(word)
 
     if not results: 
@@ -37,12 +37,12 @@ async def generate_response(user_id : Annotated[str, Depends(get_user_id)], word
 
 @router.get("/analysis/{sentence}/{word}", response_model=AIBasicResponse, response_description="Analyze a sentence and generate a response about its grammar structure.")
 async def analyze_sentence(
-    user_id : Annotated[str, Depends(get_user_id)],
+    user_info : Annotated[dict, Depends(get_user_info)],
     sentence: str = Path(description="The sentence to analyze", min_length=1, max_length=400),
     word: str = Path(description="The word to analyze", min_length=1, max_length=30),):
 
     #Check for request limit.
-    check_request_limit(user_id, 'grammarReq')
+    check_request_limit(user_info, 'grammarReq')
 
     sentence = unquote(sentence) # filter out special characters from url like ? , . etc
     results = await word_assistant.analyze_sentence_with_word(sentence, word)
@@ -50,10 +50,10 @@ async def analyze_sentence(
     return {"response": results}
 
 @router.get("/grammar/{sentence}", response_model=FixGrammarResponse, response_description="Fix all grammar errors in a sentence. Additionally fixing spelling errors or typos.")
-async def fix_grammar(user_id : Annotated[str, Depends(get_user_id)], sentence : str = Path(description="The sentence to fix", min_length=1, max_length=500)):
+async def fix_grammar(user_info : Annotated[dict, Depends(get_user_info)], sentence : str = Path(description="The sentence to fix", min_length=1, max_length=500)):
 
     #Check for request limit.
-    check_request_limit(user_id, 'fixSentenceReq')
+    check_request_limit(user_info, 'fixSentenceReq')
 
     sentence = unquote(sentence) # filter out special characters from url like ? , . etc
     results = await word_assistant.fix_grammar_errors(sentence)
@@ -61,13 +61,13 @@ async def fix_grammar(user_id : Annotated[str, Depends(get_user_id)], sentence :
     
 @router.get("/paraphrase/{sentence}/{context}" , response_model=ParaphraseResponse, response_description="Generate a paraphrase of a sentence.")
 async def generate_paraphrase(
-    user_id : Annotated[str, Depends(get_user_id)],
+    user_info : Annotated[dict, Depends(get_user_info)],
     sentence : str = Path(description="The sentence to paraphrase", min_length=1, max_length=200),
     context: Literal['Casual', 'Formal', 'Sortened', 'Extended', 'Academic'] = Path(description="Context for the paraphrase", min_length=1, max_length=20),
     ):
     
     #Check for request limit.
-    check_request_limit(user_id, 'paraphraseReq')
+    check_request_limit(user_info, 'paraphraseReq')
 
     sentence = unquote(sentence) # filter out special characters from url like ? , . etc
     results = await word_assistant.paraphrase(sentence, context=context)
@@ -75,13 +75,13 @@ async def generate_paraphrase(
 
 @router.get("/compare/{word1}/{word2}", response_model=CompareResponse, response_description="Compare two words and generate a response about their similarities and differences.")
 async def compare(
-    user_id : Annotated[str, Depends(get_user_id)],
+    user_info : Annotated[dict, Depends(get_user_info)],
     word1: str = Path(description="The first word to compare", min_length=1, max_length=30),
     word2: str = Path(description="The second word to compare", min_length=1, max_length=30),
     ):
 
     #Check for request limit.
-    check_request_limit(user_id, 'compareWordsReq')
+    check_request_limit(user_info, 'compareWordsReq')
 
     results = await word_assistant.compare_words(word1, word2)
 

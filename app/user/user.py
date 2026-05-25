@@ -1,11 +1,9 @@
 from app.models.database import db
 from bson import ObjectId
 from pymongo.errors import WriteError
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException
-from pymongo import ReturnDocument
 import logging
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -40,67 +38,72 @@ USER_LIMITS = {
     }
 }
 
-def get_user_tier(user_id : str) -> str:
-    """
-    Retrieve user type (free, premium, premium_plus) from the users collection.
-    """
-    try:
-        user = db['users'].find_one({'_id' : ObjectId(user_id)}, {"userType" : 1 , "_id": 0})
-        return user.get('userType')
-    except AttributeError as attr_err:
-        logger.error(f'Error while accessing attr ${attr_err}')
-        raise HTTPException(status_code=400, detail=f'Error while accessing attr ${attr_err}')
-
-#TODO Consider handling all actions in one atomic way instead of if else block.
-
-def check_request_limit(user_id : str, request_type : str, increment: int = 1) -> bool:
+def check_request_limit(user_info : dict, request_type : str, increment: int = 1) -> bool:
 
     """
     Checks request limits for a specific user based on current plan.
     """
-    start = time.perf_counter()
-    user_tier = get_user_tier(user_id).lower().replace(' ', '_')
-    now = datetime.now()
-
-    is_payment_required = False
+    user_tier = user_info.get('user_tier')
+    user_id = user_info.get('user_id')
+    uid = ObjectId(user_id)
+    now = datetime.now(timezone.utc)
 
     try:
-        metrics = metrics_collection.find_one({'_id' : ObjectId(user_id)})
-        
-        if not metrics or metrics.get('reset_date', now) <= now:
-            #If no record, create a new with reset time
-            updated_metrics = metrics_collection.find_one_and_update(
-                {"_id" : ObjectId(user_id)},
-                {"$set" : {
-                    'sentenceReq' : 0,
-                    'generateReq' : 0,
-                    'grammarReq' : 0,
-                    'paraphraseReq' : 0,
-                    'fixSentenceReq' : 0,
-                    'compareWordsReq' : 0,
-                    'reset_date' : now + timedelta(days=1) # Reset request limits after one day.
-                }},
-                upsert=True,
-                return_document=ReturnDocument.AFTER
-                )
-        else : 
-            updated_metrics = metrics
-            
-        #Check if user exceed the limit
-        limits = USER_LIMITS.get(user_tier, USER_LIMITS['free'])
+        limits = USER_LIMITS.get(user_tier, USER_LIMITS["free"])
+        limit = limits[request_type]
 
-        if updated_metrics[request_type] >= limits[request_type]:
-            is_payment_required = True
-            logger.info('Request limit exceeded.')
-            raise HTTPException(status_code=402, detail=f'Request limit exceed. {request_type}. Payment Required.')
+        now = datetime.now(timezone.utc)
+        reset_date = now + timedelta(days=1)
 
-        #Increase request count if user has request limit
-        metrics_collection.update_one({'_id' : ObjectId(user_id) }, {"$inc" : {request_type : increment}})
-        
-        end = time.perf_counter()
-        print(f'Took {end - start} to check request limit.')
+        metrics_collection.update_one(
+            {"_id": uid},
+            {
+                "$setOnInsert": {
+                    "sentenceReq": 0,
+                    "generateReq": 0,
+                    "grammarReq": 0,
+                    "paraphraseReq": 0,
+                    "fixSentenceReq": 0,
+                    "compareWordsReq": 0,
+                    "reset_date": reset_date
+                }
+            },
+            upsert=True
+        )
 
-        return is_payment_required
+        metrics_collection.update_one(
+            {
+                "_id": uid,
+                "reset_date": {"$lte": now}
+            },
+            {
+                "$set": {
+                    "sentenceReq": 0,
+                    "generateReq": 0,
+                    "grammarReq": 0,
+                    "paraphraseReq": 0,
+                    "fixSentenceReq": 0,
+                    "compareWordsReq": 0,
+                    "reset_date": reset_date
+                }
+            }
+        )
+
+        result = metrics_collection.update_one(
+            {
+                "_id": uid,
+                f"{request_type}": {"$lt": limit}
+            },
+            {
+                "$inc": {request_type: increment}
+            }
+        )
+
+        if result.modified_count == 0:
+            raise HTTPException(
+                status_code=402,
+                detail=f"Request limit exceeded for {request_type}"
+            )
 
     except WriteError as write_err:
         logger.error(f'Error while writing the database {write_err}')
