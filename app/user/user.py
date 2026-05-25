@@ -50,17 +50,18 @@ def check_request_limit(user_info : dict, request_type : str, increment: int = 1
     start = time.perf_counter()
     user_tier = user_info.get('user_tier')
     user_id = user_info.get('user_id')
+    uid = ObjectId(user_id)
     now = datetime.now()
 
     is_payment_required = False
 
     try:
-        metrics = metrics_collection.find_one({'_id' : ObjectId(user_id)})
+        metrics = metrics_collection.find_one({'_id' : uid})
         
         if not metrics or metrics.get('reset_date', now) <= now:
             #If no record, create a new with reset time
             updated_metrics = metrics_collection.find_one_and_update(
-                {"_id" : ObjectId(user_id)},
+                {"_id" : uid},
                 {"$set" : {
                     'sentenceReq' : 0,
                     'generateReq' : 0,
@@ -85,7 +86,7 @@ def check_request_limit(user_info : dict, request_type : str, increment: int = 1
             raise HTTPException(status_code=402, detail=f'Request limit exceed. {request_type}. Payment Required.')
 
         #Increase request count if user has request limit
-        metrics_collection.update_one({'_id' : ObjectId(user_id) }, {"$inc" : {request_type : increment}})
+        metrics_collection.update_one({'_id' : uid }, {"$inc" : {request_type : increment}})
         
         end = time.perf_counter()
         print(f'Took {end - start} to check request limit.')
