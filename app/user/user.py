@@ -53,8 +53,6 @@ def check_request_limit(user_info : dict, request_type : str, increment: int = 1
     uid = ObjectId(user_id)
     now = datetime.now()
 
-    is_payment_required = False
-
     try:
         metrics = metrics_collection.find_one({'_id' : uid})
         
@@ -81,7 +79,6 @@ def check_request_limit(user_info : dict, request_type : str, increment: int = 1
         limits = USER_LIMITS.get(user_tier, USER_LIMITS['free'])
 
         if updated_metrics[request_type] >= limits[request_type]:
-            is_payment_required = True
             logger.info('Request limit exceeded.')
             raise HTTPException(status_code=402, detail=f'Request limit exceed. {request_type}. Payment Required.')
 
@@ -91,7 +88,7 @@ def check_request_limit(user_info : dict, request_type : str, increment: int = 1
         end = time.perf_counter()
         print(f'Took {end - start} to check request limit.')
 
-        return is_payment_required
+        return False
 
     except WriteError as write_err:
         logger.error(f'Error while writing the database {write_err}')
