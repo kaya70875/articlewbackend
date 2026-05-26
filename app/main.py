@@ -3,7 +3,7 @@ from app.routes.sentences import router as sentences_route
 from app.routes.ai import router as ai_route
 from app.routes.paddle.server import router as paddle_route
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes.wordInfo import router as wordInfo_route
+from app.routes.word_info import router as wordInfo_route
 from app.error_handlers.handlers import setup_exception_handlers
 import nltk
 import os

@@ -5,28 +5,43 @@ import logging
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
-def extract_sentences_from_raw_text(results : list, word: str) -> list[str]:
+SENTENCE_SPLIT_REGEX = r'(?<=[.!?])\s+'
 
+def extract_sentences_from_raw_text(results: list, word: str) -> list[dict]:
     """
-    Extract the sentence that contains the word. This function extract sentences from a text or sentence using a regular expression.
-
-    Args:
-        results (list): The text or sentence to search for the word.
-        word (str): The word to search for in the text.
-    
-    Returns:
-        list: The list of extracted sentences.
+    Extract sentences containing the word from the raw text and put it into a list.
     """
+    escaped_word = re.escape(word)
 
-    regex = rf'\b[A-Z][^.!?]*?\b{word}\b[^.!?]*[.!?]'
+    word_pattern = re.compile(
+        rf'\b{escaped_word}\b',
+        re.IGNORECASE
+    )
+
     new_results = []
-    
-    for text in results:
-        extracted_sentences = re.findall(regex, text['text'], re.IGNORECASE)
-        new_text = ' '.join(extracted_sentences)
-        new_text_dict = {**text, 'text': new_text}  # Preserve other fields and update 'text'
-        new_results.append(new_text_dict)
-        
+
+    for item in results:
+
+        text = item.get("text", "")
+
+        sentences = re.split(
+            SENTENCE_SPLIT_REGEX,
+            text
+        )
+
+        matched_sentences = [
+            sentence.strip()
+            for sentence in sentences
+            if word_pattern.search(sentence)
+        ]
+
+        if matched_sentences:
+
+            new_results.append({
+                **item,
+                "text": " ".join(matched_sentences)
+            })
+
     return new_results
 
 def highlight_corrections(original : str, corrected : str) -> tuple[str, str]:
