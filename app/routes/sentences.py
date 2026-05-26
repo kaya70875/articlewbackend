@@ -8,7 +8,6 @@ from app.user.extract_jwt_token import get_user_info
 from app.user.user import check_request_limit
 import logging
 import asyncio
-import time
 
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -29,8 +28,7 @@ async def sentences(
     Get sentences containing the word, optionally filtered by categories, length, and sorted.
     """
     #Check for request limit for specific user and route
-    start = time.perf_counter()
-    await asyncio.to_thread(check_request_limit, user_info, 'sentenceReq')
+    #await asyncio.to_thread(check_request_limit, user_info, 'sentenceReq')
 
     try:
         filter_query = {"$text": {"$search": f"\"{word}\""}}
@@ -55,8 +53,6 @@ async def sentences(
 
         results = await asyncio.to_thread(get_cursors, filter_query, skip, page_size)
         filtered_results = get_filtered_sentences(results, word)
-        end = time.perf_counter()
-        print(f"Request processed in {end - start:.2f} seconds")
         return {
             'word': word,
             'categories': categories,
