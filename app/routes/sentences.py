@@ -27,11 +27,10 @@ async def sentences(
     """
     Get sentences containing the word, optionally filtered by categories, length, and sorted.
     """
-    #Check for request limit for specific user and route
-    #await asyncio.to_thread(check_request_limit, user_info, 'sentenceReq')
+    await asyncio.to_thread(check_request_limit, user_info, 'sentenceReq')
 
     try:
-        filter_query = {"$text": {"$search": f"\"{word}\""}}
+        filter_query = {"$text": {"$search": word}}
 
         # Add categories to the filter if provided
         if categories:
