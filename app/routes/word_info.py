@@ -3,7 +3,6 @@ from app.models.word_info import *
 from word.wordkit import Wordkit
 import asyncio
 import logging
-from word.spacyWord import calculate_similarity_score
 
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -29,13 +28,3 @@ async def get_word_info(word: str = Path(description="The word to get info about
     except Exception as e:
         logger.error(f"Unexpected error occurred! : {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
-
-@router.get('/wordSimilarity/{word1}/{word2}', response_model=WordSimilarityResponse, response_description="Get a similarity score between two words")
-async def get_word_similarity(inputs : WordSimilarityRequest = Depends()):
-    if inputs.word1 == inputs.word2:
-        logger.error('Got the same word as an input.')
-        raise HTTPException(status_code=400, detail="Both words must not be the same.")
-
-    score = await asyncio.to_thread(calculate_similarity_score, inputs.word1, inputs.word2)
-
-    return {"score" : round((score * 100), 2)}

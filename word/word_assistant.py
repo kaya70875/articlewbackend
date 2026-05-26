@@ -2,6 +2,8 @@ from app.utils.request_helpers import get_chat_completion
 from app.utils.text_helpers import *
 import asyncio
 
+### LEGACY CLASS. This will be removed in the future when we have new implementations ready. This class is used for AI related routes and functionalities. It uses Hugging Face models to generate responses for the routes. The methods in this class are used to generate responses for the AI related routes in the app/routes/legacy/ai.py file.
+
 class WordAssistant:
     def __init__(self, api_key: str):
         self.api_key = api_key
@@ -68,22 +70,3 @@ class WordAssistant:
         # Ensure the final answer is clean and does not contain any tags
         final_answer = await asyncio.to_thread(extract_paraphrase_sentences, response_text)
         return final_answer
-    
-    async def compare_words(self, word_1 : str, word_2 : str) -> str:
-        """
-        Compare two words and provide examples of how each word is used in a sentence.
-        Args:
-            word_1 (str): The first word to compare.
-            word_2 (str): The second word to compare.
-            api_key (str): The API key for the Hugging Face model.
-        Returns:
-            str: The comparison of the two words with examples
-        """
-
-        content = {
-                "role": "user",
-                "content": f"Compare '{word_1}' and '{word_2}'. Explain their similarities and differences. Format the response as valid JSON with the following structure: {{ \"similarities\": \"...\", \"differences\": \"...\", \"examples_word1\": [\"...\"], \"examples_word2\": [\"...\"] }}."
-            }
-
-        response_text = await asyncio.to_thread(get_chat_completion, self.api_key, content, 1.3, 'json_object')
-        return response_text
