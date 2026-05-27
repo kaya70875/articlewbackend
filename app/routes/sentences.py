@@ -27,7 +27,7 @@ async def sentences(
     """
     Get sentences containing the word, optionally filtered by categories, length, and sorted.
     """
-    await asyncio.to_thread(check_request_limit, user_info, 'sentenceReq')
+    #await asyncio.to_thread(check_request_limit, user_info, 'sentenceReq')
 
     try:
         filter_query = {"$text": {"$search": word}}
@@ -50,14 +50,21 @@ async def sentences(
 
         skip = (page - 1) * page_size
 
-        results = await asyncio.to_thread(get_cursors, filter_query, skip, page_size)
+        total_results, results = await asyncio.gather(
+            asyncio.to_thread(sentences_collection.count_documents, filter_query),
+            asyncio.to_thread(get_cursors, filter_query, skip, page_size)
+        )
+
         filtered_results = get_filtered_sentences(results, word)
+        total_pages = -(-total_results // page_size)
         return {
             'word': word,
+            'sentences': filtered_results,
+            'total_results': total_results,
+            'total_pages': total_pages,
             'categories': categories,
             'min_length': min_length,
             'max_length': max_length,
-            'sentences': filtered_results
         }
     except CursorNotFound as cursor_err:
         logger.error(f'Cursor not found! {cursor_err}')
