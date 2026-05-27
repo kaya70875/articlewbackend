@@ -1,7 +1,7 @@
 .env
 .venv
 /venv
-TODO
+TODO.md
 __pycache__/
 *.pyc
 .pytest_cache/
