@@ -1,6 +1,7 @@
+import re
+
 from fastapi import APIRouter, HTTPException, Query, Path, Depends
 from app.models.database import sentences_collection
-from app.utils.text_helpers import extract_sentences_from_raw_text
 from pymongo.errors import CursorNotFound
 from pymongo.cursor import Cursor
 from typing import Annotated
@@ -16,7 +17,6 @@ router = APIRouter()
 
 @router.get("/sentences/{word}")
 async def sentences(
-    user_info : Annotated[dict, Depends(get_user_info)],
     word: str = Path(description="The word to search for in sentences", min_length=1, max_length=200),
     categories: str = Query(None, description="Comma-separated list of categories"),
     min_length: int = Query(None, description="Minimum sentence length"),
@@ -30,7 +30,12 @@ async def sentences(
     #await asyncio.to_thread(check_request_limit, user_info, 'sentenceReq')
 
     try:
-        filter_query = {"$text": {"$search": word}}
+        filter_query = {
+            "text": {
+                "$regex": rf"\b{re.escape(word)}\b",
+                "$options": "i"
+            }
+        }
 
         # Add categories to the filter if provided
         if categories:
@@ -55,11 +60,10 @@ async def sentences(
             asyncio.to_thread(get_cursors, filter_query, skip, page_size)
         )
 
-        filtered_results = get_filtered_sentences(results, word)
         total_pages = -(-total_results // page_size)
         return {
             'word': word,
-            'sentences': filtered_results,
+            'sentences': results,
             'total_results': total_results,
             'total_pages': total_pages,
             'categories': categories,
@@ -71,16 +75,5 @@ async def sentences(
         raise HTTPException(status_code=400, detail=f'Curson not found! {cursor_err}')
 
 def get_cursors(filter_query: dict, skip: int, page_size: int) -> list[Cursor]:
-    cursor = sentences_collection.find(filter_query, {'_id': 0, 'text': 1, 'category': 1, 'source': 1}).skip(skip).limit(page_size)
+    cursor = sentences_collection.find(filter_query, {'_id': 0, 'text': 1, 'category': 1, 'source': 1, 'next_sentence': 1, 'prev_sentence': 1}).skip(skip).limit(page_size)
     return list(cursor)
-
-
-def get_filtered_sentences(results: list[Cursor], word: str) -> list[str]:
-    filtered_results = extract_sentences_from_raw_text(results, word)
-
-    # Handle no results
-    if not results:
-        logger.info("No sentences found for the given word and filters")
-        raise HTTPException(status_code=404, detail="No sentences found for the given word and filters")
-
-    return filtered_results
